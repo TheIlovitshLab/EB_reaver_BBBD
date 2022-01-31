@@ -29,10 +29,12 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     blackpx = sum(bw_vessels & mask ,'all');   % count number of black pixels in image
     eb_ext_in_segments(n) = sum(extra_vessel_red(mask),'all')/...
         (sum(mask,'all')-blackpx);
-    % Visualization if needed for debugging and n_px optimzation
-%     k = cat(3,extra_vessel_red,2^13.*uint16(mask),2^13.*uint16(vessel_dilated-bw_vessels));
+%     %% Visualization if needed for debugging and n_px optimzation
+%     k = cat(3,extra_vessel_red,2^14.*uint16(mask),2^13.*uint16(vessel_dilated-bw_vessels));
 %     k = k + 2^16*uint16(repmat(single_seg_bw,1,1,3));
-%     imshow(k)
+%     imshow(k); 
+%     pause(0.1);
+%     %%
 end
 
 end
