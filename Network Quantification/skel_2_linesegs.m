@@ -15,7 +15,6 @@ Output arguements:
                     [row, col] coordinates of all points belonging to that
                     segment
 %}
-
 % Get wire/skeleton and trace
 bw_init_skel = full(sp_wire);
 bw_skel_index = 1:numel(bw_init_skel);
@@ -59,7 +58,10 @@ while 1  %
         is_bp(k) = ismember(seg_trace(k,:),rc_pts,'rows');
     end
     bp_ind = find(is_bp);
-    
+    shortdist_ind = find(diff(bp_ind)==1);
+    if numel(shortdist_ind) > 0
+        bp_ind(shortdist_ind + 1) = [];
+    end
     rcind_seg_cell{n} = cell(numel(bp_ind)-1,1);
     % Segments are trace pixels in between a couple of rc_pts
     if length(bp_ind) >= 2
@@ -84,11 +86,6 @@ while 1  %
     % Add end points back in, then remove lone points (particles smaller than 9 px)
     bw_skel_rem = bwareaopen(bw_skel_rem |  bw_pts,9);
     
-%     %% Plot for debugging
-%     figure(1); imshow(bw_init_skel |  bw_pts); hold on;
-%     plot(seg_trace(:,2),seg_trace(:,1),'g','LineWidth',0.5);
-%     pause(0.1);
-%     %%
     % Loop stop condition
     if sum(bw_skel_rem,'all')==0
         break 
