@@ -20,7 +20,7 @@ if isempty(dir(mat_path))
 end
 
 % Predifined vars
-n_px = 4; % Size of neighborhood around a blood vessel
+n_px = 10; % Size of neighborhood around a blood vessel (in px)
 
 % Load matlab reaver file
 st = load(mat_path);
@@ -41,10 +41,8 @@ metric_st=struct();
 metric_st.vessel_area_fraction = sum(st.derivedPic.BW_2(:))./prod(st.imageSize);
 
 % Add average radius and calssify each lineseg
-tic; disp(['started skel_2_linesegs on ',im_file]);
 rcind_seg_cell = skel_2_linesegs(st.derivedPic.wire,...
     fliplr(st.derivedPic.branchpoints),fliplr(st.derivedPic.endpoints));
-toc
 % Measure segment radii and record diameter
 [all_seg_rads, ~] = measure_segment_rad(rcind_seg_cell,...
     st.derivedPic.BW_2, fliplr(st.derivedPic.endpoints));

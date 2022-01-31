@@ -3,7 +3,7 @@ This script takes a directory of images pre-processed by REAVER, with
 Existing ".mat" analysis files, and computes EB leakage
 %}
 %% Take care of dependencies
-run DEV_INITIALIZE.m
+% run DEV_INITIALIZE.m
 %% Load files
 path = uigetdir();
 all_files = dir(fullfile(path,'*.mat'));
@@ -27,3 +27,4 @@ for i = 1:numel(verified_files)
     end
 end
 writetable(results_tbl,fullfile(path,'EB_extravasation_analysis.csv'));
+save(fullfile(path,'EB_analysis.mat'),'results_tbl');
