@@ -1,9 +1,10 @@
-function [metric_st, short_lbl_st] = reaver_quantify_EB(mat_path)
+function [metric_st, short_lbl_st] = reaver_quantify_EB(mat_path,n_px)
 %{
 Custom image processing and measurements extraction function.
 Input arguements:
     mat_math = path to a .mat file containing the verified image
                parameters, BW image and wireframe
+    n_px = Size of neighborhood around a blood vessel (in px)
 Output arguements:
     metric_st = structure with all measurements. containing the following
         fields:                   
@@ -18,9 +19,6 @@ Output arguements:
 if isempty(dir(mat_path))
     error('File not found in specified path: %s\n' , mat_path);
 end
-
-% Predifined vars
-n_px = 10; % Size of neighborhood around a blood vessel (in px)
 
 % Load matlab reaver file
 st = load(mat_path);

@@ -16,7 +16,6 @@ function eb_ext_in_segments = calc_eb_ext(rcind_seg_cell,all_seg_rads,bw_vessels
             neighborhood around the i-th segment in the EB image
 %}
 eb_ext_in_segments = zeros(length(rcind_seg_cell),1); % Create a placeholder
-extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
 se_vessel = strel('disk',ceil(n_px/2),0); % Create a universal structure element for vessel dilation
 vessel_dilated = imdilate(bw_vessels,se_vessel); % dilate the vessel surrounding by n_px
 perivasc = vessel_dilated - bw_vessels;
@@ -29,6 +28,7 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     mask = dilated_n_wire & perivasc;
     eb_ext_in_segments(n) = mean(redIm(mask),'all');
 %     %% Visualization if needed for debugging and n_px optimzation
+%     extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
 %     k = cat(3,extra_vessel_red,2^14.*uint16(mask),2^14.*uint16(vessel_dilated-bw_vessels));
 %     k = k + 2^16*uint16(repmat(single_seg_bw,1,1,3));
 %     imshow(k); 
