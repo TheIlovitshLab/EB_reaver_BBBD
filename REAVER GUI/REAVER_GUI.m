@@ -2434,11 +2434,15 @@ if isequal( clickType , 'normal' ) % Left Click
 		%---- End: Update Edit Variables
 
 		%---- Start: Determine and Toggle Relevant Pixels
+            %  take the zoom into consideration 
+            zoomFactor = size(handles.displayedChannelsImage,2)/ diff(handles.REAVER_MainAx.XLim);
+            pixelEditNeighbors = round(handles.editVariables.pixelEditNeighbors/zoomFactor);
+
 			[X,Y] = meshgrid( ...
-							  ( (clickedPoint(1)-(handles.editVariables.pixelEditNeighbors)) : ...
-							    (clickedPoint(1)+(handles.editVariables.pixelEditNeighbors)))' , ...
-							  ( (clickedPoint(2)-(handles.editVariables.pixelEditNeighbors)) : ...
-							    (clickedPoint(2)+(handles.editVariables.pixelEditNeighbors)))' ) ;
+							  ( (clickedPoint(1)-(pixelEditNeighbors)) : ...
+							    (clickedPoint(1)+(pixelEditNeighbors)))' , ...
+							  ( (clickedPoint(2)-(pixelEditNeighbors)) : ...
+							    (clickedPoint(2)+(pixelEditNeighbors)))' ) ;
 
 			X = reshape( X , numel(X) , 1 ) ;
 			Y = reshape( Y , numel(Y) , 1 ) ;
@@ -2494,11 +2498,15 @@ elseif isequal( clickType , 'alt' ) % Right Click
 		%---- End: Update Edit Variables
 
 		%---- Start: Determine and Toggle Relevant Pixels
+            %  take the zoom into consideration 
+            zoomFactor = size(handles.displayedChannelsImage,2)/ diff(handles.REAVER_MainAx.XLim);
+            pixelEditNeighbors = round(handles.editVariables.pixelEditNeighbors/zoomFactor);
+
 			[X,Y] = meshgrid( ...
-							  ( (clickedPoint(1)-(handles.editVariables.pixelEditNeighbors)) : ...
-							    (clickedPoint(1)+(handles.editVariables.pixelEditNeighbors)))' , ...
-							  ( (clickedPoint(2)-(handles.editVariables.pixelEditNeighbors)) : ...
-							    (clickedPoint(2)+(handles.editVariables.pixelEditNeighbors)))' ) ;
+							  ( (clickedPoint(1)-(pixelEditNeighbors)) : ...
+							    (clickedPoint(1)+(pixelEditNeighbors)))' , ...
+							  ( (clickedPoint(2)-(pixelEditNeighbors)) : ...
+							    (clickedPoint(2)+(pixelEditNeighbors)))' ) ;
 
 			X = reshape( X , numel(X) , 1 ) ;
 			Y = reshape( Y , numel(Y) , 1 ) ;
@@ -2656,7 +2664,9 @@ function figButtonMotion(hObject,~)
 
 		if handles.editVariables.pixelEditNeighbors
 			% If the draw tool has a width > 1
-			fatLineImage = imdilate(binaryImage, true(2*handles.editVariables.pixelEditNeighbors+1)) ;
+            zoomFactor = size(handles.displayedChannelsImage,2)/ diff(handles.REAVER_MainAx.XLim);
+            pixelEditNeighbors = round(handles.editVariables.pixelEditNeighbors/zoomFactor);
+			fatLineImage = imdilate(binaryImage, true(2*pixelEditNeighbors+1)) ;
 		else
 			% If the draw tool has a width of exactly 1
 			fatLineImage = binaryImage ;

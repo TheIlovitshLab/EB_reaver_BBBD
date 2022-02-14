@@ -5,7 +5,9 @@ Existing ".mat" analysis files, and computes EB leakage
 %% Take care of dependencies
 % run DEV_INITIALIZE.m
 %% Predefined params
-n_px = 10;
+if ~exist('n_px','var')
+    n_px = 10;
+end
 %% Load files
 path = uigetdir();
 all_files = dir(fullfile(path,'*.mat'));
@@ -14,9 +16,9 @@ summary_idx = cellfun(@(x) strcmp(x,'User Verified Table.mat'),...
 
 summary = load(fullfile(path,all_files(summary_idx).name));
 data_files = all_files(~summary_idx);
-EB_analysis = cellfun(@(x) strcmp(x,'EB_analysis.mat'),...
-    {data_files.name});
-data_files = data_files(~EB_analysis);
+EB_analysis = cellfun(@(x) strfind(x,'EB_analysis'),{data_files.name},'UniformOutput',0);
+EB_analysis = cellfun(@(x) isempty(x),EB_analysis);
+data_files = data_files(EB_analysis);
 verified_files = data_files(cell2mat(summary.userVerified(:,2)));   % Get only verified files
 
 %% create placeholders
@@ -32,5 +34,6 @@ for i = 1:numel(verified_files)
         results_tbl.(f{k})(i) = metric_st.(f{k});  
     end
 end
-writetable(results_tbl,fullfile(path,'EB_extravasation_analysis.csv'));
-save(fullfile(path,'EB_analysis.mat'),{'results_tbl','n_px'});
+writetable(results_tbl,fullfile(path,['EB_extravasation_analysis_',num2str(n_px),'px.csv']));
+res = struct('table',results_tbl,'n_px',n_px);
+save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),'res');

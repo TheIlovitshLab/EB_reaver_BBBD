@@ -15,6 +15,7 @@ Output arguements:
     short_lbl_st = structure containing labels for metric_st measured
                    parameters.
 %}
+warning('off','imageio:tiffmexutils:libtiffWarning');
 
 if isempty(dir(mat_path))
     error('File not found in specified path: %s\n' , mat_path);
@@ -23,9 +24,6 @@ end
 % Load matlab reaver file
 st = load(mat_path);
 fov_um = st.image_resolution* st.imageSize(1);
-fov_mm = fov_um/1000;
-
-umppix = st.image_resolution;
 
 % Load red channel
 im_file = [mat_path(1:end-4),'.tif'];
@@ -41,22 +39,36 @@ metric_st.vessel_area_fraction = sum(st.derivedPic.BW_2(:))./prod(st.imageSize);
 % Add average radius and calssify each lineseg
 rcind_seg_cell = skel_2_linesegs(st.derivedPic.wire,...
     fliplr(st.derivedPic.branchpoints),fliplr(st.derivedPic.endpoints));
+
 % Measure segment radii and record diameter
 [all_seg_rads, ~] = measure_segment_rad(rcind_seg_cell,...
     st.derivedPic.BW_2, fliplr(st.derivedPic.endpoints));
-all_seg_diams = 2.*all_seg_rads.median+1;  %Multiply by 2 and add the pixel for the center point to get the diameter
-metric_st.mean_segment_diam_um = mean(all_seg_diams) .* (fov_um ./ st.imageSize(1));
-all_segment_diam_um = cell(1,1);
-avg_red_px_val = all_segment_diam_um;
-all_segment_diam_um{1,1} = all_seg_diams .* (fov_um ./ st.imageSize(1));
-metric_st.all_segment_diam_um = all_segment_diam_um;
+
+mean_diams = 2.*all_seg_rads.mean+1;  %Multiply by 2 and add the pixel for the center point to get the diameter
+median_diams = 2.*all_seg_rads.median+1;
+max_diams = 2.*all_seg_rads.max+1;
+
+mean_segment_diam_um = cell(1,1);
+median_segment_diam_um = cell(1,1);
+max_segment_diam_um = cell(1,1);
+
+mean_segment_diam_um{1,1} = mean_diams .* (fov_um ./ st.imageSize(1));
+median_segment_diam_um{1,1} = median_diams .* (fov_um ./ st.imageSize(1));
+max_segment_diam_um{1,1} = max_diams .* (fov_um ./ st.imageSize(1));
+
+metric_st.mean_segment_diam_um = mean_segment_diam_um;
+metric_st.median_segment_diam_um = median_segment_diam_um;
+metric_st.max_segment_diam_um = max_segment_diam_um;
+
 % TODO: Use maximal segment radius instead of median for dilation
+avg_red_px_val = cell(1,1);
 avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
 metric_st.avg_red_px_val = avg_red_px_val;
 % Short hand labels for plotting/display
 short_lbl_st.vessel_area_fraction = 'VAF';
-short_lbl_st.mean_segment_length_um = 'Mean  Len. (um)';
-short_lbl_st.segments_diam_um = 'All Segment Diam (um)';
+short_lbl_st.median_segments_diam_um = 'Mean Segment Diam (um)';
+short_lbl_st.median_segments_diam_um = 'medain Segment Diam (um)';
+short_lbl_st.max_segments_diam_um = 'Max Segment Diam (um)';
 short_lbl_st.avg_red_px_val = 'All segments EB extravasation (mean px intensity)';
 end
 
