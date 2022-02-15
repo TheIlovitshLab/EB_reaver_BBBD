@@ -27,8 +27,9 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     dilated_n_wire = imdilate(single_seg_bw,se_wire); % Dilate the wire
     single_vessel_perivasc_mask = dilated_n_wire & perivasc;
     single_vessel_mask = bw_vessels & dilated_n_wire; % Area within the vessel (inside the specific segment)
-    eb_ext_in_segments(n) = median(redIm(single_vessel_perivasc_mask),'all')/...
-        max(redIm(single_vessel_mask),[],'all');
+    eb_ext_in_segments(n) = ...
+        double(median(redIm(single_vessel_perivasc_mask),'all'))/...
+        double(median(redIm(single_vessel_mask),'all'));
 %     %% Visualization if needed for debugging and n_px optimzation
 %     extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
 %     k = cat(3,extra_vessel_red,2^14.*uint16(mask),2^14.*uint16(vessel_dilated-bw_vessels));
