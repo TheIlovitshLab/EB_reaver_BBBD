@@ -26,6 +26,7 @@ results_tbl = table;
 results_tbl.image_name = {verified_files.name}';
 %% Iterate over files
 for i = 1:numel(verified_files)
+    fprintf('Processing file %d of %d\n',i,numel(verified_files));
     % Calc extravasation for every segment.
     [metric_st, ~] = ...
         reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px);
