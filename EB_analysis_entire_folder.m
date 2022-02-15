@@ -22,18 +22,22 @@ data_files = data_files(EB_analysis);
 verified_files = data_files(cell2mat(summary.userVerified(:,2)));   % Get only verified files
 
 %% create placeholders
-results_tbl = table;
-results_tbl.image_name = {verified_files.name}';
+n_files = numel(verified_files);
+image_name = {verified_files.name}';
+vessel_area_fraction = zeros(n_files,1);
+mean_segment_diam_um = cell(n_files,1);
+median_segment_diam_um = cell(n_files,1);
+max_segment_diam_um = cell(n_files,1);
+avg_red_px_val = cell(n_files,1);
+results = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
+    median_segment_diam_um,max_segment_diam_um,avg_red_px_val);
 %% Iterate over files
-for i = 1:numel(verified_files)
+parfor i = 1:n_files
     fprintf('Processing file %d of %d\n',i,numel(verified_files));
     % Calc extravasation for every segment.
-    [metric_st, ~] = ...
-        reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px);
-    f = fields(metric_st) ;
-    for k=1:numel(f)
-        results_tbl.(f{k})(i) = metric_st.(f{k});  
-    end
+    metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px);
+    metric_st.image_name = image_name(i);
+    results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
 end
 writetable(results_tbl,fullfile(path,['EB_extravasation_analysis_',num2str(n_px),'px.csv']));
 res = struct('table',results_tbl,'n_px',n_px);

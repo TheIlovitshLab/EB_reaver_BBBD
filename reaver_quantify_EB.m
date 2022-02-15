@@ -1,4 +1,4 @@
-function [metric_st, short_lbl_st] = reaver_quantify_EB(mat_path,n_px)
+function metric_st = reaver_quantify_EB(mat_path,n_px)
 %{
 Custom image processing and measurements extraction function.
 Input arguements:
@@ -64,11 +64,5 @@ metric_st.max_segment_diam_um = max_segment_diam_um;
 avg_red_px_val = cell(1,1);
 avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
 metric_st.avg_red_px_val = avg_red_px_val;
-% Short hand labels for plotting/display
-short_lbl_st.vessel_area_fraction = 'VAF';
-short_lbl_st.median_segments_diam_um = 'Mean Segment Diam (um)';
-short_lbl_st.median_segments_diam_um = 'medain Segment Diam (um)';
-short_lbl_st.max_segments_diam_um = 'Max Segment Diam (um)';
-short_lbl_st.avg_red_px_val = 'All segments EB extravasation (mean px intensity)';
 end
 
