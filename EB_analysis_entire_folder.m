@@ -29,7 +29,7 @@ mean_segment_diam_um = cell(n_files,1);
 median_segment_diam_um = cell(n_files,1);
 max_segment_diam_um = cell(n_files,1);
 avg_red_px_val = cell(n_files,1);
-results = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
+results_tbl = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
     median_segment_diam_um,max_segment_diam_um,avg_red_px_val);
 %% Iterate over files
 parfor i = 1:n_files
@@ -39,6 +39,6 @@ parfor i = 1:n_files
     metric_st.image_name = image_name(i);
     results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
 end
-writetable(results_tbl,fullfile(path,['EB_extravasation_analysis_',num2str(n_px),'px.csv']));
+% writetable(results_tbl,fullfile(path,['EB_extravasation_analysis_',num2str(n_px),'px.csv']));
 res = struct('table',results_tbl,'n_px',n_px);
-save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),'res');
+save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),'res');

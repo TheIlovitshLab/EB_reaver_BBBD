@@ -62,7 +62,7 @@ metric_st.max_segment_diam_um = max_segment_diam_um;
 
 % TODO: Use maximal segment radius instead of median for dilation
 avg_red_px_val = cell(1,1);
-avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+avg_red_px_val{1,1} = calc_eb_ext_upto_n_px(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
 metric_st.avg_red_px_val = avg_red_px_val;
 end
 
