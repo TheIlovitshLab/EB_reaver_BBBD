@@ -26,11 +26,12 @@ for i=1:n_seg  % loop through all segments
     single_seg_bw = false(size(redIm));
     single_seg_bw(lind_seg) = 1;    % set only the segment wireframe to True
     dilated_n_wire = zeros(size(redIm,1),size(redIm,2),11);
-    dilated_n_wire(:,:,1) = single_seg_bw;
+    se_wire = strel('disk',ceil(all_seg_rads(i)+ perivasc_dist),8); % Create a specific structure element for wire dilation 
+    dilated_n_wire(:,:,1) = blockdilate(single_seg_bw,se_wire);
     for j = 1:10
-        se_wire = strel('disk',ceil(all_seg_rads(i)+ perivasc_dist),8); % Create a specific structure element for wire dilation 
+        se_wire = strel('disk',ceil(perivasc_dist),8); % Create a specific structure element for wire dilation 
         dilated_n_wire(:,:,j+1) = blockdilate(dilated_n_wire(:,:,j),se_wire);        
-        single_vessel_mask = bw_vessels & dilated_n_wire(:,:,2); % Area within the vessel (inside the specific segment)
+        single_vessel_mask = bw_vessels & dilated_n_wire(:,:,1); % Area within the vessel (inside the specific segment)
         single_vessel_perivasc_mask = ...
             (dilated_n_wire(:,:,j+1) - dilated_n_wire(:,:,j));
         single_vessel_perivasc_mask = ...
@@ -38,13 +39,13 @@ for i=1:n_seg  % loop through all segments
         eb_ext_in_segments(i,j) = ...
             double(median(redIm(single_vessel_perivasc_mask),'all'))/...
             double(median(redIm(single_vessel_mask),'all'));
-%       %% Visualization if needed for debugging and n_px optimzation
-%         extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
-%         k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...
-%             2^14.*uint16(single_vessel_mask));
-%         imshow(k); 
-%         pause(0.1);
-%       %%
+      %% Visualization if needed for debugging and n_px optimzation
+        extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
+        k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...
+            2^14.*uint16(single_vessel_mask));
+        imshow(k); 
+        pause(0.1);
+      %%
     end
 end
 
