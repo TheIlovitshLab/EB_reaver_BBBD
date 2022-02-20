@@ -8,6 +8,7 @@ Existing ".mat" analysis files, and computes EB leakage
 if ~exist('n_px','var')
     n_px = 10;
 end
+diffusion_calc = input('Calculate diffusion in multiple distances up to n_px? [0/1]');
 %% Load files
 path = uigetdir();
 all_files = dir(fullfile(path,'*.mat'));
@@ -32,13 +33,24 @@ avg_red_px_val = cell(n_files,1);
 results_tbl = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
     median_segment_diam_um,max_segment_diam_um,avg_red_px_val);
 %% Iterate over files
-parfor i = 1:n_files
-    fprintf('Processing file %d of %d\n',i,numel(verified_files));
-    % Calc extravasation for every segment.
-    metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px);
-    metric_st.image_name = image_name(i);
-    results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
+if diffusion_calc == 1  
+    parfor i = 1:n_files
+        fprintf('Processing file %d of %d\n',i,numel(verified_files));
+        % Calc extravasation for every segment.
+        metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px,1);
+        metric_st.image_name = image_name(i);
+        results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
+    end
+    res = struct('table',results_tbl,'n_px',n_px);
+    save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),'res');
+else
+    parfor i = 1:n_files
+        fprintf('Processing file %d of %d\n',i,numel(verified_files));
+        % Calc extravasation for every segment.
+        metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px,0);
+        metric_st.image_name = image_name(i);
+        results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
+    end
+    res = struct('table',results_tbl,'n_px',n_px);
+    save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),'res');
 end
-% writetable(results_tbl,fullfile(path,['EB_extravasation_analysis_',num2str(n_px),'px.csv']));
-res = struct('table',results_tbl,'n_px',n_px);
-save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),'res');
