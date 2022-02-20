@@ -1,10 +1,12 @@
-function metric_st = reaver_quantify_EB(mat_path,n_px)
+function metric_st = reaver_quantify_EB(mat_path,n_px,diffu)
 %{
 Custom image processing and measurements extraction function.
 Input arguements:
     mat_math = path to a .mat file containing the verified image
                parameters, BW image and wireframe
     n_px = Size of neighborhood around a blood vessel (in px)
+    diffu = determines if the function extracts the diffusin in multiple or
+                signle distance (0 = single, 1 = multiple)
 Output arguements:
     metric_st = structure with all measurements. containing the following
         fields:                   
@@ -62,7 +64,12 @@ metric_st.max_segment_diam_um = max_segment_diam_um;
 
 % TODO: Use maximal segment radius instead of median for dilation
 avg_red_px_val = cell(1,1);
-avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+switch diffu
+    case 0
+        avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+    case 1
+        avg_red_px_val{1,1} = calc_eb_ext_upto_n_px(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+end
 metric_st.avg_red_px_val = avg_red_px_val;
 end
 
