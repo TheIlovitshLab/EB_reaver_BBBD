@@ -1,6 +1,17 @@
 function eb_grouped = intogroups(eb,diams,th)
-    eb_grouped = cell(3,1);
-    eb_grouped{1} = eb(diams<=th(1));
-    eb_grouped{2} = eb(diams>th(1) & diams<= th(2));
-    eb_grouped{3} = eb(diams>th(2));
+%{
+Function to devide vessles into groups based on thresholds
+Input arguements:
+    eb = vector of red intensity measurements for multiple segments
+    diams = the coresponding diameters of the segments
+    th = vector of thresholds for diameters
+Output arguemrnts:
+    eb_grouped = cell vector of length numel(th)+1, where each cell
+    contains the eb values of segments belogning to the specific bin
+%}
+    eb_grouped = cell(length(th)+1,1);
+    th = [0,th];
+    for i = 1:length(th)-1
+        eb_grouped{i} = eb(th(i)<=diams & diams<=th(i+1));
+    end
 end

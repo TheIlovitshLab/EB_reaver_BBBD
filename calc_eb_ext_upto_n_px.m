@@ -37,15 +37,14 @@ for i=1:n_seg  % loop through all segments
         single_vessel_perivasc_mask = ...
             logical((single_vessel_perivasc_mask | bw_vessels) - bw_vessels);
         eb_ext_in_segments(i,j) = ...
-            double(median(redIm(single_vessel_perivasc_mask),'all'))/...
-            double(median(redIm(single_vessel_mask),'all'));
-      %% Visualization if needed for debugging and n_px optimzation
-        extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
-        k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...
-            2^14.*uint16(single_vessel_mask));
-        imshow(k); 
-        pause(0.1);
-      %%
+            double(median(redIm(single_vessel_perivasc_mask),'all'));
+%       %% Visualization if needed for debugging and n_px optimzation
+%         extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
+%         k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...
+%             2^14.*uint16(single_vessel_mask));
+%         imshow(k); 
+%         pause(0.1);
+%       %%
     end
 end
 

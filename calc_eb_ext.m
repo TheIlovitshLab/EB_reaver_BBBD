@@ -28,8 +28,7 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     dilated_n_wire = blockdilate(single_vessel_mask,se_peri); % Dilate the single vessel
     single_vessel_perivasc_mask = logical((dilated_n_wire | bw_vessels)-bw_vessels);
     eb_ext_in_segments(n) = ...
-        double(median(redIm(single_vessel_perivasc_mask),'all'))/...
-        double(median(redIm(single_vessel_mask),'all'));
+        double(median(redIm(single_vessel_perivasc_mask),'all'));
 %     % Visualization if needed for debugging and n_px optimzation
 %     extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
 %     k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...

@@ -2,6 +2,8 @@
 %%
 clc;clear;
 % Define helper functions
+um_px = 0.29288;    % constant
+
 col=@(x)reshape(x,numel(x),1);
 boxplot2=@(C,varargin)boxplot(cell2mat(cellfun(col,col(C),'uni',0)),...
     cell2mat(arrayfun(@(I)I*ones(numel(C{I}),1),col(1:numel(C)),'uni',0)),varargin{:});
@@ -27,11 +29,7 @@ subplot(2,2,1);
 scatter(control_mean_diams,control_eb);
 hold on;
 scatter(test_mean_diams,test_eb);
-f_c_mean = fit(control_mean_diams,control_eb,'power2');
-f_t_mean = fit(test_mean_diams,test_eb,'power2');
-plot(f_c_mean,'g');
-plot(f_t_mean,'r');
-legend('control','treatment','fitted control','fitted treatment');
+legend('control','treatment');
 title('extravasation as function of mean diameter');
 xlabel('mean segment diameter [um]'); ylabel('Average red pixel intensity');
 
@@ -39,11 +37,7 @@ subplot(2,2,2);
 scatter(control_max_diams,control_eb);
 hold on;
 scatter(test_max_diams,test_eb);
-f_c_max = fit(control_max_diams,control_eb,'power2');
-f_t_max = fit(test_max_diams,test_eb,'power2');
-plot(f_c_max,'g');
-plot(f_t_max,'r');
-legend('control','treatment','fitted control','fitted treatment');
+legend('control','treatment');
 title('extravasation as function of max diameter');
 xlabel('Max segment diameter [um]'); ylabel('Average red pixel intensity');
 
@@ -51,11 +45,7 @@ subplot(2,2,[3,4]);
 scatter(control_median_diams,control_eb);
 hold on;
 scatter(test_median_diams,test_eb);
-f_c_median = fit(control_median_diams,control_eb,'power2');
-f_t_median = fit(test_median_diams,test_eb,'power2');
-plot(f_c_median,'g');
-plot(f_t_median,'r');
-legend('control','treatment','fitted control','fitted treatment');
+legend('control','treatment');
 title('extravasation as function of median diameter');
 xlabel('median segment diameter [um]'); ylabel('Average red pixel intensity');
 %% box plot
@@ -108,7 +98,7 @@ title('extravasation as function of median diameter');
 ylabel('Average red pixel intensity');
 %% Bar plot
 
-ths = [3,9];
+ths = 1:15;
 control_groups_mean = intogroups(control_eb,control_mean_diams,ths);
 control_mu_mean = cellfun(@(x) [mean(x);std(x)],control_groups_mean,...
     'UniformOutput',false);
@@ -126,45 +116,22 @@ test_mu_median = cellfun(@(x) [mean(x);std(x)],...
     intogroups(test_eb,test_median_diams,ths),'UniformOutput',false);
 test_mu_median = [test_mu_median{:}];
 
-control_mu_max = cellfun(@(x) [mean(x);std(x)],...
-    intogroups(control_eb,control_max_diams,ths),'UniformOutput',false);
-control_mu_max = [control_mu_max{:}];
-test_mu_max = cellfun(@(x) [mean(x);std(x)],...
-    intogroups(test_eb,test_max_diams,ths),'UniformOutput',false);
-test_mu_max = [test_mu_max{:}];
 
 figure;
-% sgtitle(['Surrounding thickness: ',num2str(control.res.n_px),' [Px]']);
 
-% subplot(1,2,1);
-b1 =bar(0.75:2:4.75,control_mu_median(1,:),0.25,'b');
+b1 =bar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),0.25,'b');
 hold on;
-b2 =bar(1.25:2:5.25,test_mu_median(1,:),0.25,'g');
+b2 =bar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),0.25,'g');
 legend('control','treatment');
-errorbar(0.75:2:4.75,control_mu_median(1,:),...
+errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
     control_mu_median(2,:),control_mu_median(2,:),'LineStyle','none');
-errorbar(1.25:2:5.25,test_mu_median(1,:),...
+errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
     test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
 legend([b1,b2],'control','treatment');
-xticks([1,3,5]);
-xticklabels({['<',num2str(ths(1)),'[um]'],...
-    [num2str(ths(1)),'[um]<diam<',num2str(ths(2)),'[um]'],...
-    [num2str(ths(2)),'[um]<']})
-title('extravasation as function of median diameter');
-
-% subplot(1,2,2);
-% b1 = bar(0.75:2:4.75,control_mu_max(1,:),0.25,'b');
-% hold on;
-% b2 = bar(1.25:2:5.25,test_mu_max(1,:),0.25,'g');
-% legend('control','treatment');
-% errorbar(0.75:2:4.75,control_mu_max(1,:),...
-%     control_mu_max(2,:),control_mu_max(2,:),'LineStyle','none');
-% errorbar(1.25:2:5.25,test_mu_max(1,:),...
-%     test_mu_max(2,:),test_mu_max(2,:),'LineStyle','none'); 
-% legend([b1,b2],'control','treatment');
-% xticks([1,3,5]);
-% xticklabels({['<',num2str(ths(1)),'[um]'],...
-%     [num2str(ths(1)),'[um]<diam<',num2str(ths(2)),'[um]'],...
-%     [num2str(ths(2)),'[um]<']})
-% title('extravasation as function of max diameter');
+xticks(ths.*2-1);
+xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+title({'EB intensity in perivascular area as function of the vessel diameter',...
+    [num2str(control.res.n_px*um_px),' um perivascular area']});
+xlabel('Vessel diameter [um]');
+ylabel('Median red intensity in perivascular area [16bit]')
 
