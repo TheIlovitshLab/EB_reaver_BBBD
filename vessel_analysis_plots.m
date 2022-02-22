@@ -24,24 +24,7 @@ test_max_diams = vertcat(test.res.table.max_segment_diam_um{:,:});
 test_eb = vertcat(test.res.table.avg_red_px_val{:,:});
 %% SCATTER PLOTS
 figure; 
-sgtitle(['Surrounding thickness: ',num2str(control.res.n_px),' [Px]']);
-subplot(2,2,1);
-scatter(control_mean_diams,control_eb);
-hold on;
-scatter(test_mean_diams,test_eb);
-legend('control','treatment');
-title('extravasation as function of mean diameter');
-xlabel('mean segment diameter [um]'); ylabel('Average red pixel intensity');
 
-subplot(2,2,2);
-scatter(control_max_diams,control_eb);
-hold on;
-scatter(test_max_diams,test_eb);
-legend('control','treatment');
-title('extravasation as function of max diameter');
-xlabel('Max segment diameter [um]'); ylabel('Average red pixel intensity');
-
-subplot(2,2,[3,4]);
 scatter(control_median_diams,control_eb);
 hold on;
 scatter(test_median_diams,test_eb);
@@ -49,52 +32,22 @@ legend('control','treatment');
 title('extravasation as function of median diameter');
 xlabel('median segment diameter [um]'); ylabel('Average red pixel intensity');
 %% box plot
-sgtitle(['Surrounding thickness: ',num2str(control.res.n_px),' [Px]']);
-ths = [5,9];
-mean_control_eb = intogroups(control_eb,control_mean_diams,ths);
-mean_test_eb = intogroups(test_eb,test_mean_diams,ths);
-max_control_eb = intogroups(control_eb,control_max_diams,ths);
-max_test_eb = intogroups(test_eb,test_max_diams,ths);
+ths = 1:15;
+
 median_control_eb = intogroups(control_eb,control_median_diams,ths);
 median_test_eb = intogroups(test_eb,test_median_diams,ths);
 
-subplot(2,2,3,'align')
-boxplot2(mean_control_eb,'Colors','b','Positions',[10,30,50],...
-    'Widths',[5,5,5]);
+boxplot2(median_control_eb,'Colors','b','Positions',(ths-1).*20+10,...
+    'Widths',5*ones(1,length(ths)+1));
 hold on;
-boxplot2(mean_test_eb,'Colors','k','Positions',[15,35,55],...
-    'Widths',[5,5,5]);
-xticks([12.5,32.5,52.5]);
-xticklabels({['<',num2str(ths(1)),'[um]'],...
-    [num2str(ths(1)),'[um]< <',num2str(ths(2)),'[um]'],...
-    [num2str(ths(2)),'[um]<']})
-title('extravasation as function of mean diameter');
-ylabel('Average red pixel intensity');
+boxplot2(median_test_eb,'Colors','k','Positions',(ths-1).*20+15,...
+    'Widths',5*ones(1,length(ths)+1));
+xticks((ths-1).*20+12.5);
+xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
 
-subplot(2,2,4);
-boxplot2(max_control_eb,'Colors','b','Positions',[10,30,50],...
-    'Widths',[5,5,5]);
-hold on;
-boxplot2(max_test_eb,'Colors','k','Positions',[15,35,55],...
-    'Widths',[5,5,5]);
-xticks([12.5,32.5,52.5]);
-xticklabels({['<',num2str(ths(1)),'[um]'],...
-    [num2str(ths(1)),'[um]<diam<',num2str(ths(2)),'[um]'],...
-    [num2str(ths(2)),'[um]<']})
-title('extravasation as function of max diameter');
-ylabel('Average red pixel intensity');
+title({'EB intensity in perivascular area as function of the vessel diameter',...
+    [num2str(control.res.n_px*um_px),' um perivascular area']});
 
-subplot(2,2,[1,2]);
-boxplot2(median_control_eb,'Colors','b','Positions',[10,30,50],...
-    'Widths',[5,5,5]);
-hold on;
-boxplot2(median_test_eb,'Colors','k','Positions',[15,35,55],...
-    'Widths',[5,5,5]);
-xticks([12.5,32.5,52.5]);
-xticklabels({['<',num2str(ths(1)),'[um]'],...
-    [num2str(ths(1)),'[um]<diam<',num2str(ths(2)),'[um]'],...
-    [num2str(ths(2)),'[um]<']})
-title('extravasation as function of median diameter');
 ylabel('Average red pixel intensity');
 %% Bar plot
 
