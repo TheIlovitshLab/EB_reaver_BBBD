@@ -33,7 +33,7 @@ title('extravasation as function of median diameter');
 xlabel('median segment diameter [um]'); ylabel('Average red pixel intensity');
 %% box plot
 ths = 1:15;
-
+figure;
 median_control_eb = intogroups(control_eb,control_median_diams,ths);
 median_test_eb = intogroups(test_eb,test_median_diams,ths);
 
@@ -88,3 +88,11 @@ title({'EB intensity in perivascular area as function of the vessel diameter',..
 xlabel('Vessel diameter [um]');
 ylabel('Median red intensity in perivascular area [16bit]')
 
+%% Blood vessel diameter histogram
+figure;
+histogram(control_median_diams,0.5:1:25.5); hold on;
+histogram(test_median_diams,0.5:1:25.5);
+legend('Control','Treatment');
+xlabel('Vessel diameter [um]'); ylabel('Count');
+xticks(1:25)
+title('Blood vessel diameter histogram');
