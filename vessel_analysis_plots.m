@@ -96,3 +96,12 @@ legend('Control','Treatment');
 xlabel('Vessel diameter [um]'); ylabel('Count');
 xticks(1:25)
 title('Blood vessel diameter histogram');
+
+%% Colocalization stats
+control_r = colocalization_stats(folder1);
+test_r = colocalization_stats(folder2);
+figure;
+boxplot2({control_r;test_r});
+xticklabels({'control','test'}); 
+ylabel('Pearson correlation between red and green channel');
+title('Pearson correlation score');
