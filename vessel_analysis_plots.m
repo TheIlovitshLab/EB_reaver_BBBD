@@ -49,24 +49,16 @@ title({'EB intensity in perivascular area as function of the vessel diameter',..
     [num2str(control.res.n_px*um_px),' um perivascular area']});
 
 ylabel('Average red pixel intensity');
-%% Bar plot
-
+%% Bar plot control vs test
 ths = 1:15;
-control_groups_mean = intogroups(control_eb,control_mean_diams,ths);
-control_mu_mean = cellfun(@(x) [mean(x);std(x)],control_groups_mean,...
-    'UniformOutput',false);
-control_mu_mean = [control_mu_mean{:}];
 
-test_groups_mean = intogroups(test_eb,test_mean_diams,ths);
-test_mu_mean = cellfun(@(x) [mean(x);std(x)],...
-    test_groups_mean,'UniformOutput',false);
-test_mu_mean = [test_mu_mean{:}];
-
+control_groups = intogroups(control_eb,control_median_diams,ths);
+test_groups = intogroups(test_eb,test_median_diams,ths);
 control_mu_median = cellfun(@(x) [mean(x);std(x)],...
-    intogroups(control_eb,control_median_diams,ths),'UniformOutput',false);
+    control_groups,'UniformOutput',false);
 control_mu_median = [control_mu_median{:}];
 test_mu_median = cellfun(@(x) [mean(x);std(x)],...
-    intogroups(test_eb,test_median_diams,ths),'UniformOutput',false);
+    test_groups,'UniformOutput',false);
 test_mu_median = [test_mu_median{:}];
 
 
@@ -75,18 +67,72 @@ figure;
 b1 =bar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),0.25,'b');
 hold on;
 b2 =bar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),0.25,'g');
-legend('control','treatment');
 errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
     control_mu_median(2,:),control_mu_median(2,:),'LineStyle','none');
 errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
     test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
-legend([b1,b2],'control','treatment');
 xticks(ths.*2-1);
 xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
 title({'EB intensity in perivascular area as function of the vessel diameter',...
     [num2str(control.res.n_px*um_px),' um perivascular area']});
 xlabel('Vessel diameter [um]');
 ylabel('Median red intensity in perivascular area [16bit]')
+
+% Add significance stars of control vs test of same diameter
+for i = ths
+   [h,p] = ttest2(control_groups{i},test_groups{i});
+   maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
+   line([0.5,1.5]+(i-1)*2,(maxy*1.05)*[1,1]);
+   if p<=10^-4
+       text((i-1)*2+0.5,maxy*1.08,'****');
+   elseif p <=10^-3
+       text((i-1)*2+0.5,maxy*1.08,'***');
+   elseif p <=10^-2
+       text((i-1)*2+0.5,maxy*1.08,'**');
+   elseif p <=0.05
+       text((i-1)*2+0.5,maxy*1.08,'*');
+   else
+       text((i-1)*2+0.5,maxy*1.12,'ns');
+   end
+end
+legend([b1,b2],'control','treatment');
+%% Only test bar plot
+ths = 1:15;
+test_groups = intogroups(test_eb,test_median_diams,ths);
+test_mu_median = cellfun(@(x) [mean(x);std(x)],...
+    test_groups,'UniformOutput',false);
+test_mu_median = [test_mu_median{:}];
+
+
+figure;
+b2 =bar(1:2:(length(ths)*2+1),test_mu_median(1,:),0.5,'g');
+hold on;
+errorbar(1:2:(length(ths)*2+1),test_mu_median(1,:),...
+    test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
+xticks(ths.*2-1);
+xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+title({'EB intensity in perivascular area as function of the vessel diameter',...
+    [num2str(control.res.n_px*um_px),' um perivascular area']});
+xlabel('Vessel diameter [um]');
+ylabel('Median red intensity in perivascular area [16bit]')
+
+for i = ths(2:end)
+   [h,p] = ttest2(test_groups{i-1},test_groups{i});
+   maxy = max(sum(test_mu_median,1))*(0.5+i/20);
+   dy = max(sum(test_mu_median,1))*0.01;
+   line([(i-2)*2+0.5,(i-1)*2+1.5],maxy*[1,1]);
+   if p<=10^-4
+       text((i-2)*2+0.5,maxy*1.01,'****');
+   elseif p <=10^-3
+       text((i-2)*2+0.5,maxy*1.01,'***');
+   elseif p <=10^-2
+       text((i-2)*2+0.5,maxy*1.01,'**');
+   elseif p <=0.05
+       text((i-2)*2+0.5,maxy*1.01,'*');
+   else
+       text((i-2)*2+0.5,maxy*1.01+dy,'ns');
+   end
+end
 
 %% Blood vessel diameter histogram
 figure;
