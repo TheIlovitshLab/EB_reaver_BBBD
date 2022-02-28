@@ -151,3 +151,17 @@ boxplot2({control_r;test_r});
 xticklabels({'control','test'}); 
 ylabel('Pearson correlation between red and green channel');
 title('Pearson correlation score');
+[h,p] = ttest2(control_r,test_r);
+maxy = max(test_r)*1.01;
+dy = maxy*0.01;
+if p<=10^-4
+   text(2,maxy*1.01,'****','HorizontalAlignment','center');
+elseif p <=10^-3
+   text(2,maxy*1.01,'***','HorizontalAlignment','center');
+elseif p <=10^-2
+   text(2,maxy*1.01,'**','HorizontalAlignment','center');
+elseif p <=0.05
+   text(2,maxy*1.01,'*','HorizontalAlignment','center');
+else
+   text(2,maxy*1.01+dy,'ns','HorizontalAlignment','center');
+end
