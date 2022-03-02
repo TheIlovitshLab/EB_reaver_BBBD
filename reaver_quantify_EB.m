@@ -31,7 +31,7 @@ fov_um = st.image_resolution* st.imageSize(1);
 im_file = [mat_path(1:end-4),'.tif'];
 t = Tiff(im_file);
 setDirectory(t,1)
-redIm = im2uint16(read(t));   % We only need the red channel
+redIm = read(t);   % We only need the red channel
 % Initialize output struct
 metric_st=struct();
 

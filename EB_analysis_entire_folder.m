@@ -28,13 +28,15 @@ Output arguements:
     all_files = dir(fullfile(path,'*.mat'));
     summary_idx = cellfun(@(x) strcmp(x,'User Verified Table.mat'),...
         {all_files.name});
-
     summary = load(fullfile(path,all_files(summary_idx).name));
     data_files = all_files(~summary_idx);
     EB_analysis = cellfun(@(x) strfind(x,'EB_analysis'),{data_files.name},'UniformOutput',0);
-    EB_analysis = cellfun(@(x) isempty(x),EB_analysis);
-    data_files = data_files(EB_analysis);
-    verified_files = data_files(cell2mat(summary.userVerified(:,2)));   % Get only verified files
+    non_analysis = cellfun(@(x) isempty(x),EB_analysis);
+    data_files = data_files(non_analysis);
+    verified = summary.userVerified(cell2mat(summary.userVerified(:,2)),1);
+    verified = cellfun(@(x) strrep(x,'.tif','.mat'),verified,'UniformOutput',false);
+    [~,~,verified_idx] = intersect(verified',{data_files.name});
+    verified_files = data_files(verified_idx);   % Get only verified files
 
     %% create placeholders
     n_files = numel(verified_files);

@@ -32,7 +32,7 @@ legend('control','treatment');
 title('extravasation as function of median diameter');
 xlabel('median segment diameter [um]'); ylabel('Average red pixel intensity');
 %% box plot
-ths = 1:15;
+ths = 2:15;
 figure;
 median_control_eb = intogroups(control_eb,control_median_diams,ths);
 median_test_eb = intogroups(test_eb,test_median_diams,ths);
@@ -50,7 +50,7 @@ title({'EB intensity in perivascular area as function of the vessel diameter',..
 
 ylabel('Average red pixel intensity');
 %% Bar plot control vs test
-ths = 1:15;
+ths = 2:15;
 
 control_groups = intogroups(control_eb,control_median_diams,ths);
 test_groups = intogroups(test_eb,test_median_diams,ths);
@@ -80,7 +80,7 @@ ylabel('Median red intensity in perivascular area [16bit]')
 
 % Add significance stars of control vs test of same diameter
 for i = ths
-   [h,p] = ttest2(control_groups{i},test_groups{i});
+   [~,p] = ttest2(control_groups{i},test_groups{i});
    maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
    line([0.5,1.5]+(i-1)*2,(maxy*1.05)*[1,1]);
    if p<=10^-4
@@ -97,7 +97,7 @@ for i = ths
 end
 legend([b1,b2],'control','treatment');
 %% Only test bar plot
-ths = 1:15;
+ths = 2:15;
 test_groups = intogroups(test_eb,test_median_diams,ths);
 test_mu_median = cellfun(@(x) [mean(x);std(x)],...
     test_groups,'UniformOutput',false);
@@ -117,23 +117,34 @@ xlabel('Vessel diameter [um]');
 ylabel('Median red intensity in perivascular area [16bit]')
 
 for i = ths(2:end)
-   [h,p] = ttest2(test_groups{i-1},test_groups{i});
+   [~,p] = ttest2(test_groups{1},test_groups{i});
    maxy = max(sum(test_mu_median,1))*(0.5+i/20);
    dy = max(sum(test_mu_median,1))*0.01;
-   line([(i-2)*2+0.5,(i-1)*2+1.5],maxy*[1,1]);
+   line([0.5,(i-1)*2+1.5],maxy*[1,1]);
    if p<=10^-4
-       text((i-2)*2+0.5,maxy*1.01,'****');
+       text((i-1)*2+1.5,maxy*1.01,'****');
    elseif p <=10^-3
-       text((i-2)*2+0.5,maxy*1.01,'***');
+       text((i-1)*2+1.5,maxy*1.01,'***');
    elseif p <=10^-2
-       text((i-2)*2+0.5,maxy*1.01,'**');
+       text((i-1)*2+1.5,maxy*1.01,'**');
    elseif p <=0.05
-       text((i-2)*2+0.5,maxy*1.01,'*');
+       text((i-1)*2+1.5,maxy*1.01,'*');
    else
-       text((i-2)*2+0.5,maxy*1.01+dy,'ns');
+       text((i-1)*2+1.5,maxy*1.01+dy,'ns');
    end
 end
+%% test and control red histograms by diameter
+ths = [2:10,25];
 
+control_groups = intogroups(control_eb,control_median_diams,ths);
+test_groups = intogroups(test_eb,test_median_diams,ths);
+figure;
+for i = 1:numel(ths)
+    subplot(ceil(sqrt(numel(ths))),ceil(sqrt(numel(ths))),i);
+    histogram(control_groups{i},100); hold on; histogram(test_groups{i},100);
+    hold off; legend('control','test');
+    title(num2str(ths(i)));
+end
 %% Blood vessel diameter histogram
 figure;
 histogram(control_median_diams,0.5:1:25.5); hold on;
