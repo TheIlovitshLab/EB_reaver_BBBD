@@ -25,12 +25,12 @@ test_eb = vertcat(test.res.table.avg_red_px_val{:,:});
 %% SCATTER PLOTS
 figure; 
 
-scatter(control_median_diams,control_eb);
+plt = scatter(control_median_diams,control_eb);
 hold on;
-scatter(test_median_diams,test_eb);
-legend('control','treatment');
-title('extravasation as function of median diameter');
-xlabel('median segment diameter [um]'); ylabel('Average red pixel intensity');
+scatter(plt,test_median_diams,test_eb);
+legend(plt,'control','treatment');
+title(plt,'extravasation as function of median diameter');
+xlabel(plt,'median segment diameter [um]'); ylabel('Average red pixel intensity');
 %% box plot
 ths = 2:15;
 figure;
@@ -60,6 +60,9 @@ control_mu_median = [control_mu_median{:}];
 test_mu_median = cellfun(@(x) [mean(x);std(x)],...
     test_groups,'UniformOutput',false);
 test_mu_median = [test_mu_median{:}];
+% remove outliers
+control_groups = cellfun(@(x) rmoutliers(x),control_groups,'UniformOutput',false);
+test_groups = cellfun(@(x) rmoutliers(x),test_groups,'UniformOutput',false);
 
 
 figure;
@@ -79,20 +82,21 @@ xlabel('Vessel diameter [um]');
 ylabel('Median red intensity in perivascular area [16bit]')
 
 % Add significance stars of control vs test of same diameter
-for i = ths
+for i = 1:length(ths)
    [~,p] = ttest2(control_groups{i},test_groups{i});
    maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
-   line([0.5,1.5]+(i-1)*2,(maxy*1.05)*[1,1]);
+   x_cord = ths(i)-ths(1);
+   line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
    if p<=10^-4
-       text((i-1)*2+0.5,maxy*1.08,'****');
+       text(x_cord*2+0.5,maxy*1.08,'****');
    elseif p <=10^-3
-       text((i-1)*2+0.5,maxy*1.08,'***');
+       text(x_cord*2+0.5,maxy*1.08,'***');
    elseif p <=10^-2
-       text((i-1)*2+0.5,maxy*1.08,'**');
+       text(x_cord*2+0.5,maxy*1.08,'**');
    elseif p <=0.05
-       text((i-1)*2+0.5,maxy*1.08,'*');
+       text(x_cord*2+0.5,maxy*1.08,'*');
    else
-       text((i-1)*2+0.5,maxy*1.12,'ns');
+       text(x_cord*2+0.5,maxy*1.12,'ns');
    end
 end
 legend([b1,b2],'control','treatment');
@@ -133,6 +137,26 @@ for i = ths(2:end)
        text((i-1)*2+1.5,maxy*1.01+dy,'ns');
    end
 end
+%% Reduced mean bar plot
+ths = 2:15;
+
+control_groups = intogroups(control_eb,control_median_diams,ths);
+test_groups = intogroups(test_eb,test_median_diams,ths);
+control_mu_median = cellfun(@(x) [mean(x);std(x)],...
+    control_groups,'UniformOutput',false);
+control_mu_median = [control_mu_median{:}];
+test_mu_median = cellfun(@(x) [mean(x);std(x)],...
+    test_groups,'UniformOutput',false);
+test_mu_median = [test_mu_median{:}];
+
+b1 =bar(0.75:2:(length(ths)*2+0.75),...
+    test_mu_median(1,:)-control_mu_median(1,:),0.25,'b');
+xticks(ths.*2-1);
+xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+title({'test-control',...
+    [num2str(control.res.n_px*um_px),' um perivascular area']});
+xlabel('Vessel diameter [um]');
+ylabel('test-control difference in median red intensity [16bit]')
 %% test and control red histograms by diameter
 ths = [2:10,25];
 
