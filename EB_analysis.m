@@ -47,6 +47,36 @@ classdef EB_analysis
             xlabel('median segment diameter [um]'); 
             ylabel('Average red pixel intensity');
         end
+        function fitplot(obj,fittype,ths)
+            if nargin < 3
+                ths = 1:15;
+            end
+            control_groups = intogroups(obj.control_eb,obj.control_median_diams,ths);
+            test_groups = intogroups(obj.test_eb,obj.test_median_diams,ths);
+            test_red = cellfun(@(x) mean(x),test_groups);
+            control_red = cellfun(@(x) mean(x),control_groups);
+            test_red_std = cellfun(@(x) std(x),test_groups);
+            control_red_std = cellfun(@(x) std(x),control_groups);
+            errorbar(control_red,control_red_std,'b'); hold on;
+            errorbar(test_red,test_red_std,'g');
+            [f1,gof1] = ...
+                fit(obj.control_median_diams(obj.control_median_diams >= ths(1) &...
+                obj.control_median_diams <= ths(end)),...
+                obj.control_eb(obj.control_median_diams >= ths(1) &...
+                obj.control_median_diams <= ths(end))...
+                ,fittype);
+            [f2,gof2] = ...
+                fit(obj.test_median_diams(obj.test_median_diams >= ths(1) &...
+                obj.test_median_diams <= ths(end)),...
+                obj.test_eb(obj.test_median_diams >= ths(1) &...
+                obj.test_median_diams <= ths(end))...
+                ,fittype);
+            plot(f1,'b--');
+            plot(f2,'g--');
+            legend('control','test',fitstr(f1,gof1),fitstr(f2,gof2));
+            xlabel('median segment diameter [um]'); 
+            ylabel('Average red pixel intensity [8bit]');
+        end
         function boxplot(obj,ths)
             if nargin < 2
                 ths = 2:15;
@@ -91,12 +121,12 @@ classdef EB_analysis
                     hold on;
                     errorbar(1:2:(length(ths)*2+1),test_mu_median(1,:),...
                         test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
-                    xticks(ths.*2-1);
+                    xticks(1:2:(length(ths)*2+1));
                     xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.um_px),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Median red intensity in perivascular area [16bit]')
+                    ylabel('Median red intensity in perivascular area [8bit]')
 
                     for i = ths(2:end)
                        [~,p] = ttest2(test_groups{1},test_groups{i});
@@ -123,12 +153,12 @@ classdef EB_analysis
                         control_mu_median(2,:),control_mu_median(2,:),'LineStyle','none');
                     errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
                         test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
-                    xticks(ths.*2-1);
+                    xticks(1:2:(length(ths)*2+1));
                     xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.um_px),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Median red intensity in perivascular area [16bit]')
+                    ylabel('Median red intensity in perivascular area [8bit]')
 
                     % Add significance stars of control vs test of same diameter
                     for i = 1:length(ths)
@@ -152,12 +182,12 @@ classdef EB_analysis
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
                     test_mu_median(1,:)-control_mu_median(1,:),0.25,'b');
-                    xticks(ths.*2-1);
+                    xticks(1:2:(length(ths)*2+1));
                     xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
                     title({'test-control',...
                         [num2str(obj.n_px*obj.um_px),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('test-control difference in median red intensity [16bit]')
+                    ylabel('test-control difference in median red intensity [8bit]')
             end
         end
         function redDistrebution(obj,ths)
@@ -183,4 +213,15 @@ classdef EB_analysis
             title('Blood vessel diameter histogram'); 
         end
     end
+end
+
+%% Helper functions
+function sfit = fitstr(f,gof)
+% Create a label string for fit
+sfit = ['y=',formula(f)];
+vals = coeffvalues(f); names = coeffnames(f);
+for i = 1:length(vals)
+    sfit = strrep(sfit,names{i},num2str(vals(i)));
+end
+sfit = [sfit,' ; R^2=',num2str(gof.rsquare)];
 end
