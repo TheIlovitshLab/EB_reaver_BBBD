@@ -36,26 +36,23 @@ classdef EB_analysis
             new_obj.segment_tbl(~area_idx,:) = [];
         end
         function new_obj = remove_outliers(obj,ths,varargin)
-           % Create a new EB_analysis object where the data is cleaned from
-           % outliers at each diameter group (test and control seperatly).
-           % Simply applies rmoutliers() to the control and test groups at
-           % each diameter.
-           % Inputs:
-           %    ths - diameter groups to be used for cleaning
-%            if nargin < 2
-%                ths = 2:15;
-%            end
-%            new_obj = obj;
-%            [control_groups,control_diams] = intogroups(obj.control_eb,...
-%                obj.control_median_diams,ths);
-%            [test_groups,test_diams] = intogroups(obj.test_eb,obj.test_median_diams,...
-%                ths);
-%            control_idx = cellfun(@(x) clean_outliers(x,varargin),control_groups);
-%            [control_groups,control_diams] = ...
-%                clean_data_by_idx(control_groups,control_diams,control_idx);
-%            test_idx = cellfun(@(x) clean_outliers(x,varargin),test_groups);
-%            [test_groups,test_diams] = ...
-%                clean_data_by_idx(test_groups,test_diams,test_idx);
+            % Create a new EB_analysis object where the data is cleaned from
+            % outliers at each diameter group (test and control seperatly).
+            % Simply applies rmoutliers() to the control and test groups at
+            % each diameter.
+            % Inputs:
+            %    ths - diameter groups to be used for cleaning
+            if nargin < 2
+               ths = 2:15;
+            end
+            new_obj = obj;
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            control_tbl = obj.segment_tbl(control_idx,:);
+            control_tbl = prettify_table(control_tbl,ths,varargin);
+            test_tbl = obj.segment_tbl(~control_idx,:);
+            test_tbl = prettify_table(test_tbl,ths,varargin);
+            new_obj.segment_tbl = vertcat(control_tbl,test_tbl);
         end
         %% Plotting functions
         function scatterPlot(obj)
@@ -81,7 +78,11 @@ classdef EB_analysis
             % added with the error bars.
             % Inputs:
             %   fittype (optional)- fittype object to fit the data.
-            %       specifing this will add the fittet equations to the plot.
+            %       specifing this will add the fitted equations to the plot.
+            %       different fits can be specified to the control and test
+            %       via a cell array of 1 x 2. example {'poly1','poly2'}
+            %       will fit th control data with a linear equation and the
+            %       test data with a quadratic equation.
             %   ths (optional)- array of diameters to be used as x-axis.
             %       vessels with diameter larger than ths(end) will not be
             %       presented.
@@ -103,6 +104,10 @@ classdef EB_analysis
             errorbar(control_red,control_red_std,'b'); hold on;
             errorbar(test_red,test_red_std,'g');
             if nargin >= 2
+                if isa(fittype,'char')
+                    tmp = fittype;
+                    fittype = cell(1,2); fittype(:) = cellstr(tmp);
+                end
                 control_median_diams = ...
                     obj.segment_tbl.median_segment_diam_um(control_idx);
                 control_eb = ...
@@ -116,13 +121,13 @@ classdef EB_analysis
                     control_median_diams <= ths(end)),...
                     control_eb(control_median_diams >= ths(1) &...
                     control_median_diams <= ths(end))...
-                    ,fittype);
+                    ,fittype{1});
                 [f2,gof2] = ...
                     fit(test_median_diams(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end)),...
                     test_eb(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end))...
-                    ,fittype);
+                    ,fittype{2});
                 plot(f1,'b--');
                 plot(f2,'g--');
                 legend('control','test',fitstr(f1,gof1),fitstr(f2,gof2));
@@ -346,4 +351,23 @@ end
 detailed_tbl = table(imname,vertcat(tbl.median_segment_diam_um{:,:}),...
     vertcat(tbl.avg_red_px_val{:,:}),'VariableNames',...
     {'image_name','median_segment_diam_um','avg_red_px_val'}); 
+end
+function pretty_tbl = prettify_table(tbl,ths,varargin)
+% Get a table, sort it by the median vessel diameter, remove diameters
+% larger than ths(end), and for each diameter group in ths remove the
+% outliers.
+pretty_tbl = tbl(tbl.median_segment_diam_um <= ths(end),:);
+pretty_tbl = sortrows(pretty_tbl,'median_segment_diam_um');
+ths = [0,ths];
+if isempty(varargin{:}), varargin = 'median'; end
+remove = logical(ones(height(pretty_tbl),1));
+for i = 1:length(ths)-1  
+    cur_range = ...
+        find((pretty_tbl.median_segment_diam_um > ths(i)) &...
+        (pretty_tbl.median_segment_diam_um <= ths(i+1)));
+    cur_eb = pretty_tbl.avg_red_px_val(cur_range);
+    [~,removed] = rmoutliers(cur_eb,varargin);
+    remove(cur_range(1):cur_range(end)) = removed;
+end
+pretty_tbl(remove,:) = [];
 end
