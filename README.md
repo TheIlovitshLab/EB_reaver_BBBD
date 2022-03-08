@@ -24,10 +24,8 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 12. Move onto the next image, or auto process all images at once in the folder by going to "Data >> Process All Images".
 
 ## Output Metrics
-1. open the "EB_analysis_entire_folder.m" file and run it on the pre-processed tiff folder.
-2. The script will analyze the data and return a 'EB_extravasation_analysis.csv' file in the processed folder 
-* Each processed image is represented by a row inside the csv file. The following measurements are extracted for each image:
-1. **vessel_area_fraction**: fraction of pixels in image that belong to a blood vessel (*units*: none, fraction).
-2. **mean_len_um**: measures the mean length of vessels. Calculates length for each vessel and then computes mean(*units*: um).
-4. **mean_segment_diam_um**: measure the median segment diameter **for every segment in the image seperatly** . (*units*: um)
-5. **avg_red_px_val**: measure the mean pixel intensity of EB channel in the perivascular area **for every segment in the image seperatly** . (*units*: 16bit)
+1. run the "EB_analysis_entire_folder" function on the pre-processed tiff folder.
+    > The script will analyze the data and return a 'EB_analysis_npx.m' file in the processed folder 
+2. run the same script on the control and test data.
+3. Initialize an experiment object using the "EB_analysis" class. this will prompt you to load the EB_analysis_npx.m files from the control and test data folders
+4. Use the built-in class methods to extract beautiful visualiations.
