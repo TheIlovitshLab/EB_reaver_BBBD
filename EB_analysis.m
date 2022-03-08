@@ -360,7 +360,7 @@ pretty_tbl = tbl(tbl.median_segment_diam_um <= ths(end),:);
 pretty_tbl = sortrows(pretty_tbl,'median_segment_diam_um');
 ths = [0,ths];
 if isempty(varargin{:}), varargin = 'median'; end
-remove = logical(ones(height(pretty_tbl),1));
+remove = true(height(pretty_tbl),1);
 for i = 1:length(ths)-1  
     cur_range = ...
         find((pretty_tbl.median_segment_diam_um > ths(i)) &...
