@@ -364,7 +364,6 @@ classdef EB_analysis
             if nargin < 2
                ths = 2:15;
             end
-            obj = obj.classify_opening(ths,3);
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             ths = [0, ths];
