@@ -23,6 +23,7 @@ classdef EB_analysis
             test_tbl.label = label;
             obj.segment_tbl = vertcat(control_tbl,test_tbl);
             obj.n_px = control.res.n_px;
+            obj = obj.classify_opening;
         end
         function new_obj = subarea(obj,area_name)
             % Create new object with only sub area of the brain specified
@@ -53,6 +54,41 @@ classdef EB_analysis
             test_tbl = obj.segment_tbl(~control_idx,:);
             test_tbl = prettify_table(test_tbl,ths,varargin);
             new_obj.segment_tbl = vertcat(control_tbl,test_tbl);
+        end
+        function new_obj = classify_opening(obj,ths,numstd)
+            % Classify if a vessel was opened or not based on the red
+            % intensity compared to the control intensity ditribution
+            % Do it seperatly for every diameter group specified by ths
+            % Inputs:
+            %    ths - diameter groups to be used for classification
+            %    numstd - number of standard deviationd from control avarage
+            %        red intensity to use as opening threshold
+            if nargin <3
+                numstd = 3;
+            end
+            if nargin < 2
+               ths = 2:15;
+            end
+            new_obj = obj;
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            [cont_eb_grouped,~] = ...
+                intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
+                obj.segment_tbl.median_segment_diam_um(control_idx),ths);
+            cont_avs = cellfun(@(x) mean(x), cont_eb_grouped);
+            cont_stds = cellfun(@(x) std(x), cont_eb_grouped);
+            treat_th = cont_avs + numstd.*cont_stds; % Calculate the threshold
+            % placeholder setup
+            new_obj.segment_tbl.opening = ...
+                zeros(height(new_obj.segment_tbl),1);
+            ths = [0,ths];
+            for i = 1:length(ths)-1
+                new_obj.segment_tbl.opening(...
+                    new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                    new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                    ~control_idx &...
+                    new_obj.segment_tbl.avg_red_px_val >= treat_th(i)) = 1;
+            end
         end
         %% Plotting functions
         function scatterPlot(obj)
@@ -319,6 +355,33 @@ classdef EB_analysis
             xlabel('Vessel diameter [um]'); ylabel('Count');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
+        end
+        function openedHist(obj,ths)
+            % plot the histogram of fraction of opened vesseles by diameter
+            % Inputs:
+            %   ths - array of diameters to be used as diameter ..
+            %       groups.
+            if nargin < 2
+               ths = 2:15;
+            end
+            obj = obj.classify_opening(ths,3);
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            ths = [0, ths];
+            len = length(ths)-1;
+            perc = zeros(1,len);
+            for i = 1:len
+                in_group = ...
+                    obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                    obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                    ~control_idx;
+                open_temp = in_group & obj.segment_tbl.opening;
+                perc(i) = 100*(sum(open_temp)/sum(in_group));
+            end
+            bar(ths(2:end),perc,0.5,'g');
+            xlabel('Vessel diameter [um]'); 
+            ylabel('Open vessel fraction [%]');
+            title('Opened vessel fraction as function of diameter'); 
         end
     end
 end
