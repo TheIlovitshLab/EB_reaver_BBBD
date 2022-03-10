@@ -13,7 +13,7 @@ Output arguemrnts:
     diams_grouped = eb_grouped;
     th = [0,th];
     for i = 1:length(th)-1
-        eb_grouped{i} = eb(th(i)<=diams & diams<=th(i+1));
-        diams_grouped{i} = diams(th(i)<=diams & diams<=th(i+1));
+        eb_grouped{i} = eb(th(i)<=diams & diams<th(i+1));
+        diams_grouped{i} = diams(th(i)<=diams & diams<th(i+1));
     end
 end
