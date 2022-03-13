@@ -318,12 +318,14 @@ classdef EB_analysis
                     ylabel('test-control difference in median red intensity [8bit]')
             end
         end
-        function redDistrebution(obj,ths)
+        function redDistrebution(obj,ths,numstd)
             % Plot the extravasation distribution of vesseles in control
             % and test groups groupd by their diameter.
             % Inputs:
             %   ths (optional)- array of diameters to be used as diameter ..
             %       groups.
+            %   numstd (optional) - plot the threshold between control and
+            %       test as mean + numstd*sigma
             if nargin < 2
                 ths = [2:10,25];
             end
@@ -336,11 +338,24 @@ classdef EB_analysis
                 intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
                 obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
             figure;
-            for i = 1:numel(ths)
-                subplot(ceil(sqrt(numel(ths))),ceil(sqrt(numel(ths))),i);
-                histogram(control_groups{i},100); hold on; histogram(test_groups{i},100);
-                hold off; legend('control','test');
-                title(num2str(ths(i)));
+            len = numel(ths);
+            ths = [0,ths];
+            for i = 1:len
+                subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
+                histogram(control_groups{i},100); hold on;
+                histogram(test_groups{i},100);
+                xlim([0,155]);
+                xlabel('Red channel median intensity in perivacular area');
+                ylabel('Segment count');
+                legend('control','test');
+                if nargin == 3
+                   controls = control_groups{i};
+                   xline(mean(controls)+numstd*std(controls));
+                   legend('control','test',...
+                       ['Control mean +',num2str(numstd),'std']);
+                end
+                hold off; 
+                title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
             end
         end
         function diamHist(obj)
