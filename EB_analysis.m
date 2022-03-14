@@ -250,15 +250,15 @@ classdef EB_analysis
                     errorbar(1:2:(length(ths)*2+1),test_mu_median(1,:),...
                         test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
                     xticks(1:2:(length(ths)*2+1));
-                    xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+                    xticklabels(generate_xticks(ths));
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
                     ylabel('Median red intensity in perivascular area [8bit]')
 
-                    for i = ths(2:end)
+                    for i = 2:numel(ths)
                        [~,p] = ttest2(test_groups{1},test_groups{i});
-                       maxy = max(sum(test_mu_median,1))*(0.5+i/20);
+                       maxy = max(sum(test_mu_median,1))*(0.8+i/20);
                        dy = max(sum(test_mu_median,1))*0.01;
                        line([0.5,(i-1)*2+1.5],maxy*[1,1]);
                        if p<=10^-4
@@ -274,7 +274,7 @@ classdef EB_analysis
                        end
                     end
                 case 2  % both groups
-                    b1 =bar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),0.25,'b');
+                    b1 = bar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),0.25,'b');
                     hold on;
                     b2 =bar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),0.25,'g');
                     errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
@@ -282,7 +282,7 @@ classdef EB_analysis
                     errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
                         test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
                     xticks(1:2:(length(ths)*2+1));
-                    xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+                    xticklabels(generate_xticks(ths));
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
@@ -292,7 +292,7 @@ classdef EB_analysis
                     for i = 1:length(ths)
                        [~,p] = ttest2(control_groups{i},test_groups{i});
                        maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
-                       x_cord = ths(i)-ths(1);
+                       x_cord = i-1;
                        line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
                        if p<=10^-4
                            text(x_cord*2+0.5,maxy*1.08,'****');
@@ -305,13 +305,14 @@ classdef EB_analysis
                        else
                            text(x_cord*2+0.5,maxy*1.12,'ns');
                        end
+                       ylim([0,maxy*1.1]);
                     end
                     legend([b1,b2],'control','treatment');
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
                     test_mu_median(1,:)-control_mu_median(1,:),0.25,'b');
                     xticks(1:2:(length(ths)*2+1));
-                    xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+                    xticklabels(generate_xticks(ths));
                     title({'test-control',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
@@ -394,6 +395,7 @@ classdef EB_analysis
             end
             bar(ths(2:end),perc,0.5,'g');
             xlabel('Vessel diameter [um]'); 
+            xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened vessel fraction as function of diameter'); 
         end
@@ -447,4 +449,15 @@ for i = 1:length(ths)-1
     remove(cur_range(1):cur_range(end)) = removed;
 end
 pretty_tbl(remove,:) = [];
+end
+function ticklabels = generate_xticks(ths)
+% Generate a cell array of xticks based on ths. where each tick is a string
+% of 'ths(i-1)-ths(i)' and for the 1st threshold it is '0-ths(1)'
+tmp = cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false);
+tmp = [{'0'},tmp];
+ticklabels = tmp(1:end-1);
+for i = 2:numel(tmp)
+    ticklabels(i-1) = ...
+        cellstr([tmp{i-1},'-',tmp{i}]);
+end
 end

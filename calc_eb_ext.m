@@ -29,14 +29,14 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     single_vessel_perivasc_mask = logical((dilated_n_wire | bw_vessels)-bw_vessels);
     eb_ext_in_segments(n) = ...
         double(median(redIm(single_vessel_perivasc_mask),'all'));
-%     % Visualization if needed for debugging and n_px optimzation
-%     extra_vessel_red = redIm.*uint16(~bw_vessels); % remove vessles from red channel
-%     k = cat(3,extra_vessel_red,2^14.*uint16(single_vessel_perivasc_mask),...
-%         2^14.*uint16(single_vessel_mask));
-%     k = k + 2^16*uint16(repmat(single_seg_bw,1,1,3));
+    % Visualization if needed for debugging and n_px optimzation
+%     extra_vessel_red = redIm.*uint8(~bw_vessels); % remove vessles from red channel
+%     k = cat(3,extra_vessel_red,zeros(size(extra_vessel_red)),...
+%         2^6.*uint8(single_vessel_perivasc_mask));
+%     k = k + 2^8*uint8(repmat(single_seg_bw,1,1,3));
 %     imshow(k); 
-%     pause(1);
-%     %
+%     pause(0.5);
+    %
 end
 
 end
