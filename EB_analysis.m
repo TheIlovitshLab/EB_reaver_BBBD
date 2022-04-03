@@ -98,11 +98,13 @@ classdef EB_analysis
                 obj.segment_tbl.label);
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(control_idx),...
-                obj.segment_tbl.avg_red_px_val(control_idx));
+                obj.segment_tbl.avg_red_px_val(control_idx),...
+                'c','#8c1515');
             hold on;
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(~control_idx),...
-                obj.segment_tbl.avg_red_px_val(~control_idx));
+                obj.segment_tbl.avg_red_px_val(~control_idx),...
+                'c','#09425A');
             legend('control','treatment');
             title('extravasation as function of median diameter');
             xlabel('median segment diameter [um]'); 
@@ -164,8 +166,8 @@ classdef EB_analysis
                     test_eb(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end))...
                     ,fittype{2});
-                plot(f1,'b--');
-                plot(f2,'g--');
+                plot(f1,'Color','#8c1515', 'LineStyle','--');
+                plot(f2,'Color','#09425A', 'LineStyle','--');
                 legend('control','test',fitstr(f1,gof1),fitstr(f2,gof2));
             else
                 legend('control','test');
@@ -192,10 +194,12 @@ classdef EB_analysis
                 intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
                 obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
 
-            boxplot2(median_control_eb,'Colors','b','Positions',(ths-1).*20+10,...
-                'Widths',5*ones(1,length(ths)+1));
+            boxplot2(median_control_eb,'Colors','#8c1515',...
+                'Positions',(ths-1).*20+10,...
+                'Widths',5*ones(1,length(ths)+1), );
             hold on;
-            boxplot2(median_test_eb,'Colors','k','Positions',(ths-1).*20+15,...
+            boxplot2(median_test_eb,'Colors','#09425A',...
+                'Positions',(ths-1).*20+15,...
                 'Widths',5*ones(1,length(ths)+1));
             xticks((ths-1).*20+12.5);
             xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
@@ -245,7 +249,8 @@ classdef EB_analysis
             test_groups = cellfun(@(x) rmoutliers(x),test_groups,'UniformOutput',false);
             switch groups
                 case 1  % only test
-                    bar(1:2:(length(ths)*2+1),test_mu_median(1,:),0.5,'g');
+                    bar(1:2:(length(ths)*2+1),test_mu_median(1,:),0.5,...
+                        'color','#09425A');
                     hold on;
                     errorbar(1:2:(length(ths)*2+1),test_mu_median(1,:),...
                         test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
@@ -274,9 +279,13 @@ classdef EB_analysis
                        end
                     end
                 case 2  % both groups
-                    b1 = bar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),0.25,'b');
+                    b1 = bar(0.75:2:(length(ths)*2+0.75),...
+                        control_mu_median(1,:),0.25,...
+                        'color','#8c1515');
                     hold on;
-                    b2 =bar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),0.25,'g');
+                    b2 =bar(1.25:2:(length(ths)*2+1.25),...
+                        test_mu_median(1,:),0.25,...
+                        'color','#09425A');
                     errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
                         control_mu_median(2,:),control_mu_median(2,:),'LineStyle','none');
                     errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
@@ -310,7 +319,8 @@ classdef EB_analysis
                     legend([b1,b2],'control','treatment');
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
-                    test_mu_median(1,:)-control_mu_median(1,:),0.25,'b');
+                    test_mu_median(1,:)-control_mu_median(1,:),0.25,...
+                    'color','#09425A');
                     xticks(1:2:(length(ths)*2+1));
                     xticklabels(generate_xticks(ths));
                     title({'test-control',...
@@ -343,8 +353,9 @@ classdef EB_analysis
             ths = [0,ths];
             for i = 1:len
                 subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
-                histogram(control_groups{i},100); hold on;
-                histogram(test_groups{i},100);
+                histogram(control_groups{i},100,'FaceColor','#8c1515');
+                hold on;
+                histogram(test_groups{i},100,'FaceColor','#09425A');
                 xlim([0,155]);
                 xlabel('Red channel median intensity in perivacular area');
                 ylabel('Segment count');
@@ -363,12 +374,16 @@ classdef EB_analysis
             % histogram of blood vessel diameter. 
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-            histogram(obj.segment_tbl.median_segment_diam_um(control_idx),...
-                0.5:1:25.5); hold on;
-            histogram(obj.segment_tbl.median_segment_diam_um(~control_idx),...
-                0.5:1:25.5);
-            legend('Control','Treatment');
-            xlabel('Vessel diameter [um]'); ylabel('Count');
+            control_diams = obj.segment_tbl.median_segment_diam_um(control_idx);
+            test_diams = obj.segment_tbl.median_segment_diam_um(~control_idx);
+            histogram(control_diams,0.5:1:25.5,...
+                'Normalization','probability','FaceColor','#007C92'); 
+            hold on;
+            histogram(test_diams,0.5:1:25.5,'Normalization','probability',...\
+                'FaceColor','#E98300');
+            legend(['Control-',num2str(numel(control_diams)),' total segments']...
+                ,['Treatment-',num2str(numel(test_diams)),' total segments']);
+            xlabel('Vessel diameter [um]'); ylabel('% of total vessels');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
         end
@@ -393,7 +408,7 @@ classdef EB_analysis
                 open_temp = in_group & obj.segment_tbl.opening;
                 perc(i) = 100*(sum(open_temp)/sum(in_group));
             end
-            bar(ths(2:end),perc,0.5,'g');
+            bar(ths(2:end),perc,0.5,'color','#009779');
             xlabel('Vessel diameter [um]'); 
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
