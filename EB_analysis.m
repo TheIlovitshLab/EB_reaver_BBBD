@@ -359,8 +359,8 @@ classdef EB_analysis
                 hold on;
                 histogram(test_groups{i},100,'FaceColor','#09425A');
                 xlim([0,155]);
-                xlabel('Red channel median intensity in perivacular area');
-                ylabel('Segment count');
+                xlabel('EB intensity [AU]');
+                ylabel('# of blood vessels');
                 legend('control','MB + FUS');
                 if nargin == 3
                    controls = control_groups{i};
@@ -411,7 +411,7 @@ classdef EB_analysis
                 perc(i) = 100*(sum(open_temp)/sum(in_group));
             end
             bar(perc,0.5,'FaceColor','#009779');
-            xlabel('Vessel diameter [um]'); 
+            xlabel('Blood vessel diameter [um]'); 
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened vessel fraction as function of diameter'); 
