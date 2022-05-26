@@ -29,33 +29,33 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 
 The EB_analysis object has the following plotting methods:
 
->scatterPlot
+>scatterPlot<
 Creates a scatter plot where each point represents a vessel segment and the axis are:
 x = vessel diameter, y = Mean red intensity in perivascular area 
 The control and test measurements are marked with different colors
 
->fitplot
+>fitplot<
 Creates two lines on a single plot, one for control and one for test data.
 Each line represents the Mean red intensity in perivascular area as function
 of the diameter with error bars (in the specified diameters).
 The lines are also fitted with an equation based on the specfied model (e.g. linear/quadratic)
 
->boxplot
+>boxplot<
 creates a box plot for control and test data side-by-side for the specified diameter groups.
 
->barplot
+>barplot<
 creates a bar plot for the specified diameter groups.
 optional flag for which class groups to plot (test, control and test, subtraction)
 
->redDistrebution
+>redDistrebution<
 Plots the distribution histogram of red intensity in perivascular area for control and test groups.
 The histograms are plotted seperately for each diameter group specified.
 
->diamHist
+>diamHist<
 Plots the histogram of diameters of all segmented vessels.
 
->openedHist
+>openedHist<
 plots the fraction of opened vessels in different diameters of vessels (in specified diameter groups)
 
->regionHistogram
+>regionHistogram<
 plots the number of vessels in each treated brain by brain region.
