@@ -31,29 +31,25 @@ classdef EB_analysis
             % Inputs:
             %   area_name (str)- string with the name of the ROI to be
             %       extracted
-            new_obj = obj;
             area_idx = cellfun(@(x) contains(lower(x),lower(area_name)),...
                 obj.segment_tbl.image_name);
+            new_obj = obj;
             new_obj.segment_tbl(~area_idx,:) = [];
         end
-        function new_obj = remove_outliers(obj,ths,varargin)
-            % Create a new EB_analysis object where the data is cleaned from
-            % outliers at each diameter group (test and control seperatly).
-            % Simply applies rmoutliers() to the control and test groups at
-            % each diameter.
-            % Inputs:
-            %    ths - diameter groups to be used for cleaning
-            if nargin < 2
-               ths = 2:15;
-            end
-            new_obj = obj;
+        function new_obj = normalize_red(obj)
+            % Create a new EB_analysis object where the data is normalized
+            % by the linear equation that fits the control data
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-            control_tbl = obj.segment_tbl(control_idx,:);
-            control_tbl = prettify_table(control_tbl,ths,varargin);
-            test_tbl = obj.segment_tbl(~control_idx,:);
-            test_tbl = prettify_table(test_tbl,ths,varargin);
-            new_obj.segment_tbl = vertcat(control_tbl,test_tbl);
+            control_median_diams =...
+                obj.segment_tbl.median_segment_diam_um(control_idx);
+            control_eb = obj.segment_tbl.avg_red_px_val(control_idx);
+            [f,~] = ...
+                fit(control_median_diams, control_eb,'poly1');
+            vals = coeffvalues(f); % Get the linear model coefficients
+            new_obj = obj;
+            new_obj.segment_tbl.avg_red_px_val =...
+                (new_obj.segment_tbl.avg_red_px_val-vals(2))./vals(1);
         end
         function new_obj = classify_opening(obj,ths,numstd)
             % Classify if a vessel was opened or not based on the red
@@ -89,6 +85,13 @@ classdef EB_analysis
                     ~control_idx &...
                     new_obj.segment_tbl.avg_red_px_val >= treat_th(i)) = 1;
             end
+        end
+        %% Statistical analysis
+        function [p,tbl,stats] = anova(obj)
+            [p,tbl,stats] = anovan(obj.segment_tbl.avg_red_px_val,...
+                {obj.segment_tbl.median_segment_diam_um, obj.segment_tbl.label},...
+                'continuous',[1],'varnames',{'diameter','label'},...
+                'model','interaction');
         end
         %% Plotting functions
         function scatterPlot(obj)
@@ -166,8 +169,11 @@ classdef EB_analysis
                     test_eb(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end))...
                     ,fittype{2});
-                plot(f1,'Color','#8c1515', 'LineStyle','--');
-                plot(f2,'Color','#09425A', 'LineStyle','--');
+                plot(f1)
+                plot(f2)
+                h= get(gca, 'Children');
+                set(h(1),'Color','#8c1515', 'LineStyle','--');
+                set(h(2),'Color','#09425A', 'LineStyle','--');
                 legend('control','test',fitstr(f1,gof1),fitstr(f2,gof2));
             else
                 legend('control','MB + FUS');
@@ -224,6 +230,9 @@ classdef EB_analysis
             %       2 = plot control and test and calculate statistical
             %           significance of difference between groups at each
             %           diameter seperatly
+            %       -1 = plot only the control group and calculate statistical
+            %           significance bewteen each diameter and the smallest
+            %           diameter
             if nargin < 3
                 groups = 0;
             end
@@ -329,6 +338,37 @@ classdef EB_analysis
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
                     ylabel('test-control difference in median red intensity [8bit]')
+                case -1  % only control
+                    bar(1:2:(length(ths)*2+1),control_mu_median(1,:),0.5,...
+                        'FaceColor','#09425A');
+                    hold on;
+                    errorbar(1:2:(length(ths)*2+1),control_mu_median(1,:),...
+                        control_mu_median(2,:),control_mu_median(2,:),...
+                        'LineStyle','none'); 
+                    xticks(1:2:(length(ths)*2+1));
+                    xticklabels(generate_xticks(ths));
+                    title({'EB intensity in perivascular area as function of the vessel diameter',...
+                        [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
+                    xlabel('Vessel diameter [um]');
+                    ylabel('Median red intensity in perivascular area [8bit]')
+
+                    for i = 2:numel(ths)
+                       [~,p] = ttest2(control_groups{1},control_groups{i});
+                       maxy = max(sum(control_mu_median,1))*(0.8+i/20);
+                       dy = max(sum(control_mu_median,1))*0.01;
+                       line([0.5,(i-1)*2+1.5],maxy*[1,1]);
+                       if p<=10^-4
+                           text((i-1)*2+1.5,maxy*1.01,'****');
+                       elseif p <=10^-3
+                           text((i-1)*2+1.5,maxy*1.01,'***');
+                       elseif p <=10^-2
+                           text((i-1)*2+1.5,maxy*1.01,'**');
+                       elseif p <=0.05
+                           text((i-1)*2+1.5,maxy*1.01,'*');
+                       else
+                           text((i-1)*2+1.5,maxy*1.01+dy,'ns');
+                       end
+                    end
             end
         end
         function redDistrebution(obj,ths,numstd)
@@ -399,22 +439,63 @@ classdef EB_analysis
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
+            frame_label = cellfun(@(x) textscan(x,'%s','Delimiter','_'),...
+                obj.segment_tbl.image_name);
+            animal_names = cellfun(@(x) x{1},frame_label,'UniformOutput',...
+                false);
+            test_animals = unique(animal_names(~control_idx));
             ths = [0, ths];
-            len = length(ths)-1;
-            perc = zeros(1,len);
-            for i = 1:len
-                in_group = ...
-                    obj.segment_tbl.median_segment_diam_um >= ths(i) &...
-                    obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
-                    ~control_idx;
-                open_temp = in_group & obj.segment_tbl.opening;
-                perc(i) = 100*(sum(open_temp)/sum(in_group));
+            len_diam_groups = length(ths)-1;
+            n_animals = numel(test_animals);
+            perc = zeros(len_diam_groups,n_animals);
+            for i = 1:len_diam_groups
+                for j = 1:n_animals
+                    in_group = ...
+                        obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                        obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                        strcmp(animal_names,test_animals(j));
+                    open_temp = in_group & obj.segment_tbl.opening;
+                    perc(i,j) = 100*(sum(open_temp)/sum(in_group));
+%                     perc(i,j) = sum(in_group);
+                end
             end
-            bar(perc,0.5,'FaceColor','#009779');
+            bar(perc,0.5);
+            legend(test_animals)
+%             bar(mean(perc,2),0.5,'FaceColor','#009779');
+%             hold on;
+%             errorbar(1:len_diam_groups,mean(perc,2),...
+%                         std(perc,0,2),std(perc,0,2),'k',...
+%                         'LineStyle','none');
             xlabel('Blood vessel diameter [um]'); 
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened vessel fraction as function of diameter'); 
+        end
+        function regionHistogram(obj)
+           % Return the region distribution of frames from each brain
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            frame_label = cellfun(@(x) textscan(x,'%s','Delimiter','_'),...
+                obj.segment_tbl.image_name);
+            animal_names = cellfun(@(x) x{1},frame_label,'UniformOutput',...
+                false);
+            region = cellfun(@(x) x{3},frame_label,'UniformOutput',...
+                false);
+            region = prettify_region(region);
+            test_animals = unique(animal_names(~control_idx));
+            regions = unique(region(~control_idx));
+            counts = zeros(numel(regions),numel(test_animals));
+            for i = 1:numel(regions)
+                for j = 1:numel(test_animals)
+                    counts(i,j) = sum(strcmp(region,regions(i)) &...
+                        strcmp(animal_names,test_animals(j)));
+                end
+            end
+            figure;
+            bar(counts,0.5);
+            legend(test_animals)
+            xticklabels(regions);
+            ylabel('Total number of vessels');
         end
     end
 end
@@ -476,5 +557,13 @@ ticklabels = tmp(1:end-1);
 for i = 2:numel(tmp)
     ticklabels(i-1) = ...
         cellstr([tmp{i-1},'-',tmp{i}]);
+end
+end
+function region_cell = prettify_region(raw)
+% Function to extract only the region string for each raw string
+region_cell = raw;
+contains_dot = cellfun(@(x) contains(x,'.'), raw);
+for i = find(contains_dot)'
+    region_cell{i} = region_cell{i}(1:end-4);
 end
 end
