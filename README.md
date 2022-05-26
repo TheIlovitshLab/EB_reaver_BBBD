@@ -10,7 +10,7 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
    This should be done everytime you work on your data as it imports all the dependencies.
 
 ## Vessel segmentation
-1. type >"REAVER_GUI"< on the MATLAB terminal and press "enter"
+1. type *"REAVER_GUI"* on the MATLAB terminal and press "enter"
 	- This will open the REAVER application
 2. Follow the REAVER pipeline described in: https://github.com/uva-peirce-cottler-lab/public_REAVER
 	- The app works only with 8-bit images 
@@ -18,7 +18,7 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 	- Use the FITC-dextran (green) channl for segmentation
 
 ## Batch analysis of segmented images
-1. type "EB_analysis_entire_folder(n_px)", replace n_px with the desired perivascular are width in pixels.
+1. type *EB_analysis_entire_folder(n_px)*, replace n_px with the desired perivascular are width in pixels.
     - The function will prompt you to choose the segmented images folder.
 2. run the same script on the control and test data.
 
@@ -29,33 +29,33 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 
 The EB_analysis object has the following plotting methods:
 
->scatterPlot<
+**scatterPlot**
 Creates a scatter plot where each point represents a vessel segment and the axis are:
 x = vessel diameter, y = Mean red intensity in perivascular area 
 The control and test measurements are marked with different colors
 
->fitplot<
+**fitplot**
 Creates two lines on a single plot, one for control and one for test data.
 Each line represents the Mean red intensity in perivascular area as function
 of the diameter with error bars (in the specified diameters).
 The lines are also fitted with an equation based on the specfied model (e.g. linear/quadratic)
 
->boxplot<
+**boxplot**
 creates a box plot for control and test data side-by-side for the specified diameter groups.
 
->barplot<
+**barplot**
 creates a bar plot for the specified diameter groups.
 optional flag for which class groups to plot (test, control and test, subtraction)
 
->redDistrebution<
+**redDistrebution**
 Plots the distribution histogram of red intensity in perivascular area for control and test groups.
 The histograms are plotted seperately for each diameter group specified.
 
->diamHist<
+**diamHist**
 Plots the histogram of diameters of all segmented vessels.
 
->openedHist<
+**openedHist**
 plots the fraction of opened vessels in different diameters of vessels (in specified diameter groups)
 
->regionHistogram<
+**regionHistogram**
 plots the number of vessels in each treated brain by brain region.
