@@ -142,8 +142,8 @@ classdef EB_analysis
             control_red = cellfun(@(x) mean(x),control_groups);
             test_red_std = cellfun(@(x) std(x),test_groups);
             control_red_std = cellfun(@(x) std(x),control_groups);
-            errorbar(control_red,control_red_std,'b'); hold on;
-            errorbar(test_red,test_red_std,'g');
+            errorbar(control_red,control_red_std,'Color','#8c1515');...
+                hold on; errorbar(test_red,test_red_std,'Color','#09425A');
             if nargin >= 2
                 if isa(fittype,'char')
                     tmp = fittype;
@@ -172,9 +172,11 @@ classdef EB_analysis
                 plot(f1)
                 plot(f2)
                 h= get(gca, 'Children');
-                set(h(1),'Color','#8c1515', 'LineStyle','--');
-                set(h(2),'Color','#09425A', 'LineStyle','--');
-                legend('control','test',fitstr(f1,gof1),fitstr(f2,gof2));
+                set(h(2),'Color','#8c1515', 'LineStyle','--');
+                set(h(1),'Color','#09425A', 'LineStyle','--');
+                legend('control','test',...
+                    strrep(fitstr(f1,gof1),'y','y(control)'),...
+                    strrep(fitstr(f2,gof2),'y','y(MB+FUS)'));
             else
                 legend('control','MB + FUS');
             end
@@ -268,24 +270,15 @@ classdef EB_analysis
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Median red intensity in perivascular area [8bit]')
+                    ylabel('Average red intensity in perivascular area [8bit]')
 
                     for i = 2:numel(ths)
                        [~,p] = ttest2(test_groups{1},test_groups{i});
                        maxy = max(sum(test_mu_median,1))*(0.8+i/20);
-                       dy = max(sum(test_mu_median,1))*0.01;
                        line([0.5,(i-1)*2+1.5],maxy*[1,1]);
-                       if p<=10^-4
-                           text((i-1)*2+1.5,maxy*1.01,'****');
-                       elseif p <=10^-3
-                           text((i-1)*2+1.5,maxy*1.01,'***');
-                       elseif p <=10^-2
-                           text((i-1)*2+1.5,maxy*1.01,'**');
-                       elseif p <=0.05
-                           text((i-1)*2+1.5,maxy*1.01,'*');
-                       else
-                           text((i-1)*2+1.5,maxy*1.01+dy,'ns');
-                       end
+                       st = sigstars(p);
+                       pos = (i-1)*2+1.5-length(st)*0.25;
+                       text(pos,maxy*1.01,st);
                     end
                 case 2  % both groups
                     b1 = bar(0.75:2:(length(ths)*2+0.75),...
@@ -306,7 +299,7 @@ classdef EB_analysis
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Median red intensity in perivascular area [8bit]')
+                    ylabel('Average red intensity in perivascular area [8bit]')
 
                     % Add significance stars of control vs test of same diameter
                     for i = 1:length(ths)
@@ -314,19 +307,9 @@ classdef EB_analysis
                        maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
                        x_cord = i-1;
                        line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
-                       if p<=10^-4
-                           text(x_cord*2+0.5,maxy*1.08,'****');
-                       elseif p <=10^-3
-                           text(x_cord*2+0.5,maxy*1.08,'***');
-                       elseif p <=10^-2
-                           text(x_cord*2+0.5,maxy*1.08,'**');
-                       elseif p <=0.05
-                           text(x_cord*2+0.5,maxy*1.08,'*');
-                       else
-                           text(x_cord*2+0.5,maxy*1.12,'ns');
-                       end
-                       ylim([0,maxy*1.1]);
+                       text(x_cord*2+0.5,maxy*1.08,sigstars(p));
                     end
+                    ylim([0,maxy*1.1]);
                     legend([b1,b2],'control','MB + FUS');
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
@@ -337,7 +320,7 @@ classdef EB_analysis
                     title({'treatment-control',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('test-control difference in median red intensity [8bit]')
+                    ylabel('test-control difference in average red intensity [8bit]')
                 case -1  % only control
                     bar(1:2:(length(ths)*2+1),control_mu_median(1,:),0.5,...
                         'FaceColor','#09425A');
@@ -350,24 +333,15 @@ classdef EB_analysis
                     title({'EB intensity in perivascular area as function of the vessel diameter',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Median red intensity in perivascular area [8bit]')
+                    ylabel('Average red intensity in perivascular area [8bit]')
 
                     for i = 2:numel(ths)
                        [~,p] = ttest2(control_groups{1},control_groups{i});
                        maxy = max(sum(control_mu_median,1))*(0.8+i/20);
-                       dy = max(sum(control_mu_median,1))*0.01;
                        line([0.5,(i-1)*2+1.5],maxy*[1,1]);
-                       if p<=10^-4
-                           text((i-1)*2+1.5,maxy*1.01,'****');
-                       elseif p <=10^-3
-                           text((i-1)*2+1.5,maxy*1.01,'***');
-                       elseif p <=10^-2
-                           text((i-1)*2+1.5,maxy*1.01,'**');
-                       elseif p <=0.05
-                           text((i-1)*2+1.5,maxy*1.01,'*');
-                       else
-                           text((i-1)*2+1.5,maxy*1.01+dy,'ns');
-                       end
+                       st = sigstars(p);
+                       pos = (i-1)*2+1.5-length(st)*0.25;
+                       text(pos,maxy*1.01,st);
                     end
             end
         end
@@ -428,12 +402,16 @@ classdef EB_analysis
             xlabel('Vessel diameter [um]'); ylabel('% of total vessels');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
+            p = anova1(obj.segment_tbl.median_segment_diam_um,control_idx)
         end
-        function openedHist(obj,ths)
+        function openedHist(obj,ths,intrabrain)
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
             %   ths - array of diameters to be used as diameter ..
             %       groups.
+            %   intrabrain - logical flag:
+            %       0 = plot all brains together,
+            %       1 = plot each brain seperatly
             if nargin < 2
                ths = 2:15;
             end
@@ -456,16 +434,27 @@ classdef EB_analysis
                         strcmp(animal_names,test_animals(j));
                     open_temp = in_group & obj.segment_tbl.opening;
                     perc(i,j) = 100*(sum(open_temp)/sum(in_group));
-%                     perc(i,j) = sum(in_group);
                 end
             end
-            bar(perc,0.5);
-            legend(test_animals)
-%             bar(mean(perc,2),0.5,'FaceColor','#009779');
-%             hold on;
-%             errorbar(1:len_diam_groups,mean(perc,2),...
-%                         std(perc,0,2),std(perc,0,2),'k',...
-%                         'LineStyle','none');
+            switch intrabrain
+                case 0
+                    % Preform whole group analysis
+                    bar(mean(perc,2),0.5,'FaceColor','#009779');
+                    hold on;
+                    errorbar(1:len_diam_groups,mean(perc,2),...
+                                std(perc,0,2),std(perc,0,2),'k',...
+                                'LineStyle','none');
+                    for i = 1:len_diam_groups-1
+                       [~,p] = ttest2(perc(i,:),perc(i+1,:));
+                       maxy = max([max(perc(i,:)),max(perc(i+1,:))]);
+                       x_cord = i-1;
+                       line([0.75,2.25]+x_cord,(maxy*1.05)*[1,1]);
+                       text(x_cord+0.75,maxy*1.08,sigstars(p));
+                    end
+                case 1
+                    bar(perc,0.5);
+                    legend(test_animals)
+            end
             xlabel('Blood vessel diameter [um]'); 
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
@@ -565,5 +554,19 @@ region_cell = raw;
 contains_dot = cellfun(@(x) contains(x,'.'), raw);
 for i = find(contains_dot)'
     region_cell{i} = region_cell{i}(1:end-4);
+end
+end
+function str = sigstars(p)
+% Function to calculate significance stars based on p val
+if p<=10^-4
+   str = '****';
+elseif p <=10^-3
+   str = '***';
+elseif p <=10^-2
+   str = '**';
+elseif p <=0.05
+   str = '*';
+else
+   str = 'ns';
 end
 end
