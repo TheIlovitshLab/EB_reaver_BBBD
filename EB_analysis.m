@@ -101,13 +101,13 @@ classdef EB_analysis
                 obj.segment_tbl.label);
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(control_idx),...
-                obj.segment_tbl.avg_red_px_val(control_idx),...
-                'c','#8c1515');
+                obj.segment_tbl.avg_red_px_val(control_idx));
+%                             'c','#8c1515'
             hold on;
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(~control_idx),...
-                obj.segment_tbl.avg_red_px_val(~control_idx),...
-                'c','#09425A');
+                obj.segment_tbl.avg_red_px_val(~control_idx));
+%                 'c','#09425A');
             legend('control','MB + FUS');
             title('extravasation as function of median diameter');
             xlabel('median segment diameter [um]'); 
@@ -190,27 +190,40 @@ classdef EB_analysis
             %   ths (optional)- array of diameters to be used as x-axis.
             %       vessels with diameter larger than ths(end) will not be
             %       presented.
-            if nargin < 2
-                ths = 1:15;
-            end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-            [median_control_eb,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
-                obj.segment_tbl.median_segment_diam_um(control_idx),ths);
-            [median_test_eb,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
-                obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
-
-            boxplot2(median_control_eb,'Colors','#8c1515',...
-                'Positions',(ths-1).*20+10,...
-                'Widths',5*ones(1,length(ths)+1));
-            hold on;
-            boxplot2(median_test_eb,'Colors','#09425A',...
-                'Positions',(ths-1).*20+15,...
-                'Widths',5*ones(1,length(ths)+1));
-            xticks((ths-1).*20+12.5);
-            xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+            if nargin < 2
+                ths = 0;
+                median_control_eb = ...
+                    obj.segment_tbl.avg_red_px_val(control_idx);
+                median_test_eb = ...
+                    obj.segment_tbl.avg_red_px_val(~control_idx);
+                boxplot(median_control_eb,...
+                    'Positions',10,...
+                    'Widths',5);
+                hold on;
+                boxplot(median_test_eb,...
+                    'Positions',20,...
+                    'Widths',5);
+                xticks([10,20]);
+                xticklabels({'Control','Test'});
+            else
+                [median_control_eb,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(control_idx),ths);
+                [median_test_eb,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
+                boxplot2(median_control_eb,...
+                    'Positions',(ths-1).*20+10,...
+                    'Widths',5*ones(1,length(ths)+1));
+                hold on;
+                boxplot2(median_test_eb,...
+                    'Positions',(ths-1).*20+15,...
+                    'Widths',5*ones(1,length(ths)+1));
+                xticks((ths-1).*20+12.5);
+                xticklabels(cellfun(@(x) num2str(x),num2cell(ths),'UniformOutput',false));
+            end
 
             title({'EB intensity in perivascular area as function of the vessel diameter',...
                 [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
@@ -236,28 +249,41 @@ classdef EB_analysis
             %           significance bewteen each diameter and the smallest
             %           diameter
             if nargin < 3
-                groups = 0;
-            end
-            if nargin < 2
-                ths = 2:15;
+                groups = 2;
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-            [control_groups,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
-                obj.segment_tbl.median_segment_diam_um(control_idx),ths);
-            [test_groups,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
-                obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
-            control_mu_median = cellfun(@(x) [mean(x);std(x)],...
-                control_groups,'UniformOutput',false);
-            control_mu_median = [control_mu_median{:}];
-            test_mu_median = cellfun(@(x) [mean(x);std(x)],...
-                test_groups,'UniformOutput',false);
-            test_mu_median = [test_mu_median{:}];
-            % remove outliers
-            control_groups = cellfun(@(x) rmoutliers(x),control_groups,'UniformOutput',false);
-            test_groups = cellfun(@(x) rmoutliers(x),test_groups,'UniformOutput',false);
+            if nargin < 2   % No diameter thresholds specified
+                control_groups = ...
+                    obj.segment_tbl.avg_red_px_val(control_idx);
+                test_groups = ...
+                    obj.segment_tbl.avg_red_px_val(~control_idx);
+                control_mu_median = [mean(control_groups);
+                    std(control_groups)];
+                test_mu_median = [mean(test_groups);
+                    std(test_groups)];
+                control_groups = rmoutliers(control_groups);
+                test_groups = rmoutliers(test_groups);
+                ths = 0;
+            else
+                [control_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(control_idx),ths);
+                [test_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
+                control_mu_median = cellfun(@(x) [mean(x);std(x)],...
+                    control_groups,'UniformOutput',false);
+                control_mu_median = [control_mu_median{:}];
+                test_mu_median = cellfun(@(x) [mean(x);std(x)],...
+                    test_groups,'UniformOutput',false);
+                test_mu_median = [test_mu_median{:}];
+                % remove outliers
+                control_groups = cellfun(@(x) rmoutliers(x),...
+                    control_groups,'UniformOutput',false);
+                test_groups = cellfun(@(x) rmoutliers(x),...
+                    test_groups,'UniformOutput',false);
+            end
             switch groups
                 case 1  % only test
                     bar(1:2:(length(ths)*2+1),test_mu_median(1,:),0.5,...
@@ -274,43 +300,69 @@ classdef EB_analysis
 
                     for i = 2:numel(ths)
                        [~,p] = ttest2(test_groups{1},test_groups{i});
-                       maxy = max(sum(test_mu_median,1))*(0.8+i/20);
+                       maxy = max(sum(test_mu_median(1:2,:),1))*(1+i/20);
                        line([0.5,(i-1)*2+1.5],maxy*[1,1]);
                        st = sigstars(p);
                        pos = (i-1)*2+1.5-length(st)*0.25;
-                       text(pos,maxy*1.01,st);
+                       if strcmp(st,'ns')
+                           y_pos = maxy*1.02;
+                       else
+                           y_pos = maxy*1.01;
+                       end
+                       text(pos,y_pos,st);
                     end
                 case 2  % both groups
-                    b1 = bar(0.75:2:(length(ths)*2+0.75),...
-                        control_mu_median(1,:),0.25,...
-                        'FaceColor','#8c1515');
-                    hold on;
-                    b2 =bar(1.25:2:(length(ths)*2+1.25),...
-                        test_mu_median(1,:),0.25,...
-                        'FaceColor','#09425A');
-                    errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
-                        control_mu_median(2,:),control_mu_median(2,:),'k',...
-                        'LineStyle','none');
-                    errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
-                        test_mu_median(2,:),test_mu_median(2,:),'k',...
-                        'LineStyle','none'); 
-                    xticks(1:2:(length(ths)*2+1));
-                    xticklabels(generate_xticks(ths));
-                    title({'EB intensity in perivascular area as function of the vessel diameter',...
-                        [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
-                    xlabel('Vessel diameter [um]');
-                    ylabel('Average red intensity in perivascular area [8bit]')
-
-                    % Add significance stars of control vs test of same diameter
-                    for i = 1:length(ths)
-                       [~,p] = ttest2(control_groups{i},test_groups{i});
-                       maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
-                       x_cord = i-1;
-                       line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
-                       text(x_cord*2+0.5,maxy*1.08,sigstars(p));
+                    if length(ths) == 1
+                        b1 = bar(0.75,control_mu_median(1,:),0.25,...
+                            'FaceColor','#8c1515');
+                        hold on;
+                        b2 =bar(1.25,test_mu_median(1,:),0.25,...
+                            'FaceColor','#09425A');
+                        errorbar(0.75,control_mu_median(1,:),...
+                            control_mu_median(2,:),control_mu_median(2,:),...
+                            'k', 'LineStyle','none');
+                        errorbar(1.25,test_mu_median(1,:),...
+                            test_mu_median(2,:),test_mu_median(2,:),'k',...
+                            'LineStyle','none'); 
+                        xticks([]);
+                        % Add significance stars of control vs test of same diameter
+                       [~,p] = ttest2(control_groups,test_groups);
+                       maxy = max([sum(control_mu_median),...
+                           sum(test_mu_median)]);
+                       line([0.5,1.5],(maxy*1.05)*[1,1]);
+                       text(0.5,maxy*1.08,sigstars(p));
+                    else
+                        b1 = bar(0.75:2:(length(ths)*2+0.75),...
+                            control_mu_median(1,:),0.25,...
+                            'FaceColor','#8c1515');
+                        hold on;
+                        b2 =bar(1.25:2:(length(ths)*2+1.25),...
+                            test_mu_median(1,:),0.25,...
+                            'FaceColor','#09425A');
+                        errorbar(0.75:2:(length(ths)*2+0.75),control_mu_median(1,:),...
+                            control_mu_median(2,:),control_mu_median(2,:),'k',...
+                            'LineStyle','none');
+                        errorbar(1.25:2:(length(ths)*2+1.25),test_mu_median(1,:),...
+                            test_mu_median(2,:),test_mu_median(2,:),'k',...
+                            'LineStyle','none'); 
+                        xticks(1:2:(length(ths)*2+1));
+                        xticklabels(generate_xticks(ths));
+                        xlabel('Vessel diameter [um]');
+                        % Add significance stars of control vs test of same diameter
+                        for i = 1:length(ths)
+                           [~,p] = ttest2(control_groups{i},test_groups{i});
+                           maxy = max([sum(control_mu_median(:,i)),sum(test_mu_median(:,i))]);
+                           x_cord = i-1;
+                           line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
+                           text(x_cord*2+0.5,maxy*1.08,sigstars(p));
+                        end
                     end
                     ylim([0,maxy*1.1]);
                     legend([b1,b2],'control','MB + FUS');
+                    title({'EB intensity in perivascular area as function of the vessel diameter',...
+                        [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
+                    ylabel('Average red intensity in perivascular area [8bit]')
+
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
                     test_mu_median(1,:)-control_mu_median(1,:),0.25,...
@@ -353,37 +405,50 @@ classdef EB_analysis
             %       groups.
             %   numstd (optional) - plot the threshold between control and
             %       test as mean + numstd*sigma
-            if nargin < 2
-                ths = [2:10,25];
-            end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-            [control_groups,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
-                obj.segment_tbl.median_segment_diam_um(control_idx),ths);
-            [test_groups,~] = ...
-                intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
-                obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
             figure;
-            len = numel(ths);
-            ths = [0,ths];
-            for i = 1:len
-                subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
-                histogram(control_groups{i},100,'FaceColor','#8c1515');
+            if nargin > 2 % Thresholds specified
+                [control_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(control_idx),ths);
+                [test_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(~control_idx),ths);   
+                            len = numel(ths);
+                ths = [0,ths];
+                for i = 1:len-1
+                    subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
+                    histogram(control_groups{i},100,'FaceColor','#8c1515');
+                    hold on;
+                    histogram(test_groups{i},100,'FaceColor','#09425A');
+    %                 xlim([0,155]);
+                    xlabel('EB intensity [AU]');
+                    ylabel('# of blood vessels');
+                    legend('control','MB + FUS');
+                    if nargin == 3
+                       controls = control_groups{i};
+                       xline(mean(controls)+numstd*std(controls));
+                       legend('control','MB + FUS',...
+                           ['Control mean +',num2str(numstd),'std']);
+                    end
+                    hold off; 
+                    title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
+                end
+            else
+                control_groups =...
+                    obj.segment_tbl.avg_red_px_val(control_idx);
+                test_groups = ...
+                    obj.segment_tbl.avg_red_px_val(~control_idx);
+                histogram(control_groups,100,'FaceColor','#8c1515');
                 hold on;
-                histogram(test_groups{i},100,'FaceColor','#09425A');
-                xlim([0,155]);
+                histogram(test_groups,100,'FaceColor','#09425A');
                 xlabel('EB intensity [AU]');
                 ylabel('# of blood vessels');
-                legend('control','MB + FUS');
-                if nargin == 3
-                   controls = control_groups{i};
-                   xline(mean(controls)+numstd*std(controls));
-                   legend('control','MB + FUS',...
-                       ['Control mean +',num2str(numstd),'std']);
-                end
+                legend('Control','Test');
                 hold off; 
-                title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
+                title({'Average red intenity in perivascular area',...
+                    'in all vessel diameters'}); 
             end
         end
         function diamHist(obj)
@@ -426,12 +491,14 @@ classdef EB_analysis
             len_diam_groups = length(ths)-1;
             n_animals = numel(test_animals);
             perc = zeros(len_diam_groups,n_animals);
+            vessel_count_per_brain = perc;
             for i = 1:len_diam_groups
                 for j = 1:n_animals
                     in_group = ...
                         obj.segment_tbl.median_segment_diam_um >= ths(i) &...
                         obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
                         strcmp(animal_names,test_animals(j));
+                    vessel_count_per_brain(i,j) = sum(in_group);
                     open_temp = in_group & obj.segment_tbl.opening;
                     perc(i,j) = 100*(sum(open_temp)/sum(in_group));
                 end
@@ -452,6 +519,31 @@ classdef EB_analysis
                        text(x_cord+0.75,maxy*1.08,sigstars(p));
                     end
                 case 1
+                    subplot(2,2,2)
+                    bar(100*perc./max(perc,[],1),0.5);
+                    legend(test_animals)
+                    xlabel('Blood vessel diameter [um]'); 
+                    xticklabels(generate_xticks(ths(2:end)));
+                    ylabel('Open vessel fraction / max Opened vessel fraction');
+                    title({'Opened vessel fraction as function of diameter',...
+                        'Normalized by maximal percentage'});
+                    subplot(2,2,3)
+                    bar(perc./sum(vessel_count_per_brain,1),0.5);
+                    legend(test_animals)
+                    xlabel('Blood vessel diameter [um]'); 
+                    xticklabels(generate_xticks(ths(2:end)));
+                    ylabel('Total number of opened vessels');
+                    title({'Opened vessel fraction as function of diameter',...
+                        'Normalized by total number of vessels in the brain'});
+                    subplot(2,2,4)
+                    bar(perc./vessel_count_per_brain,0.5);
+                    legend(test_animals)
+                    xlabel('Blood vessel diameter [um]'); 
+                    xticklabels(generate_xticks(ths(2:end)));
+                    ylabel('Total number of opened vessels');
+                    title({'Opened vessel fraction as function of diameter',...
+                        'Normalized by number of vessels in group'});
+                    subplot(2,2,1)
                     bar(perc,0.5);
                     legend(test_animals)
             end
