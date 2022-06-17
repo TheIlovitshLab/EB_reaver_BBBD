@@ -16,7 +16,7 @@ Output arguements:
 %}
     %% Predefined params
     if nargin < 3
-        multidist = input('Calculate diffusion in multiple distances up to n_px? [0/1]');
+        multidist = 0;
     end
     if nargin < 2
         path = uigetdir();

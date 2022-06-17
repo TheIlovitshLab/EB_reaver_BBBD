@@ -4,10 +4,10 @@ classdef EB_analysis
     properties
         segment_tbl
         n_px 
-        UM_PX = 0.29288;    % constant
+        UM_PX    
     end
     methods
-        function obj = EB_analysis()
+        function obj = EB_analysis(um_px)
             % Construction of new EB_analysis object.
             [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
             control = load(fullfile(folder1,file1));
@@ -24,6 +24,11 @@ classdef EB_analysis
             obj.segment_tbl = vertcat(control_tbl,test_tbl);
             obj.n_px = control.res.n_px;
             obj = obj.classify_opening;
+            if nargin < 1
+                obj.UM_PX = 0.29288;    % Default
+            else
+                obj.UM_PX = um_px;
+            end
         end
         function new_obj = subarea(obj,area_name)
             % Create new object with only sub area of the brain specified
@@ -36,20 +41,44 @@ classdef EB_analysis
             new_obj = obj;
             new_obj.segment_tbl(~area_idx,:) = [];
         end
-        function new_obj = normalize_red(obj)
-            % Create a new EB_analysis object where the data is normalized
-            % by the linear equation that fits the control data
-            control_idx = cellfun(@(x) strcmp(x,'control'),...
-                obj.segment_tbl.label);
-            control_median_diams =...
-                obj.segment_tbl.median_segment_diam_um(control_idx);
-            control_eb = obj.segment_tbl.avg_red_px_val(control_idx);
-            [f,~] = ...
-                fit(control_median_diams, control_eb,'poly1');
-            vals = coeffvalues(f); % Get the linear model coefficients
-            new_obj = obj;
-            new_obj.segment_tbl.avg_red_px_val =...
-                (new_obj.segment_tbl.avg_red_px_val-vals(2))./vals(1);
+        function writecsv(obj,control_csv_filename,test_csv_filename,ths)
+            % save control and test data to csv in a graphpad format
+            % Ths = diameter grouo edges
+            if nargin < 4
+                ths = [0,2:10];
+            end
+            control_idx = cellfun(@(x) strcmp(x,'control'),obj.segment_tbl.label);
+            control_tbl = obj.segment_tbl(control_idx,2:3);
+            test_tbl = obj.segment_tbl(~control_idx,2:3);
+            n_bins = numel(ths);
+            control_discrete_cell = cell(n_bins-1,1);
+            test_discrete_cell = cell(n_bins-1,1);
+            str_cell = cell(n_bins-1,1);
+            for i = 1:n_bins-1
+                control_discrete_cell{i} = ...
+                    control_tbl.avg_red_px_val(...
+                    control_tbl.median_segment_diam_um>=ths(i) &...
+                    control_tbl.median_segment_diam_um< ths(i+1));
+                test_discrete_cell{i} = ...
+                    test_tbl.avg_red_px_val(...
+                    test_tbl.median_segment_diam_um>=ths(i) &...
+                    test_tbl.median_segment_diam_um< ths(i+1));
+                str_cell{i} = sprintf('%d - %d',ths(i),ths(i+1));
+            end
+            control_tbl = cell2table(...
+                [str_cell,control_discrete_cell],...
+                'VariableNames',{'Diameter','red intensity'});
+            test_tbl = cell2table(...
+                [str_cell,test_discrete_cell],...
+                'VariableNames',{'Diameter','red intensity'});
+            writetable(control_tbl,control_csv_filename);
+            writetable(test_tbl,test_csv_filename);
+        end
+        function keep_diameters(obj,lowLim,highLim)
+           % Remove all vessel segments outside the given diameter range
+           obj.segment_tbl(...
+               (obj.segment_tbl.median_segment_diam_um < lowLim) |...
+               (obj.segment_tbl.median_segment_diam_um > highLim),:) = [];
         end
         function new_obj = classify_opening(obj,ths,numstd)
             % Classify if a vessel was opened or not based on the red
@@ -375,7 +404,7 @@ classdef EB_analysis
                     ylabel('test-control difference in average red intensity [8bit]')
                 case -1  % only control
                     bar(1:2:(length(ths)*2+1),control_mu_median(1,:),0.5,...
-                        'FaceColor','#09425A');
+                        'FaceColor','#8c1515');
                     hold on;
                     errorbar(1:2:(length(ths)*2+1),control_mu_median(1,:),...
                         control_mu_median(2,:),control_mu_median(2,:),...
@@ -408,7 +437,7 @@ classdef EB_analysis
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             figure;
-            if nargin > 2 % Thresholds specified
+            if nargin > 1 % Thresholds specified
                 [control_groups,~] = ...
                     intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
                     obj.segment_tbl.median_segment_diam_um(control_idx),ths);

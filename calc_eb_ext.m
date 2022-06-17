@@ -1,4 +1,5 @@
-function eb_ext_in_segments = calc_eb_ext(rcind_seg_cell,all_seg_rads,bw_vessels, redIm, n_px)
+function eb_ext_in_segments = ...
+    calc_eb_ext(rcind_seg_cell,all_seg_rads,bw_vessels, redIm, n_px, normFlag)
 %{
     Function to calculate EB extravasation around deifferent vessel segments
     according to previous vessel segmentation.
@@ -10,6 +11,8 @@ function eb_ext_in_segments = calc_eb_ext(rcind_seg_cell,all_seg_rads,bw_vessels
         redIm = image of EB channel
         n_px = how many pixels of extravasation (use according to diffusion
             theory)
+        normFlag = boolean switch to normalize by the red intensity inside
+            the vessel (default = no)
     Output arguements:
         eb_ext_in_segments = vector the length of number of segments.
             Every element contains the average pixel value of a n_px 
@@ -27,8 +30,17 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     se_peri = strel('disk',ceil(n_px),0); % Create a specific structure element for perivascular dilation 
     dilated_n_wire = blockdilate(single_vessel_mask,se_peri); % Dilate the single vessel
     single_vessel_perivasc_mask = logical((dilated_n_wire | bw_vessels)-bw_vessels);
-    eb_ext_in_segments(n) = ...
-        double(median(redIm(single_vessel_perivasc_mask),'all'));
+    if nargin < 6
+        normFlag = 0;
+    end
+    if normFlag ==1 
+        eb_ext_in_segments(n) = ...
+            double(median(redIm(single_vessel_perivasc_mask),'all'))./...
+            double(median(redIm(single_vessel_mask),'all'));
+    else
+        eb_ext_in_segments(n) = ...
+            double(median(redIm(single_vessel_perivasc_mask),'all'));
+    end
     % Visualization if needed for debugging and n_px optimzation
 %     extra_vessel_red = redIm.*uint8(~bw_vessels); % remove vessles from red channel
 %     k = cat(3,extra_vessel_red,zeros(size(extra_vessel_red)),...
