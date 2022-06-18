@@ -1,22 +1,27 @@
-function results_tbl = EB_analysis_entire_folder(n_px, path, multidist)
-%{
-Function to iterate over a directory of images pre-processed by REAVER, with 
-Existing ".mat" analysis files, and compute EB leakage
-Input arguements:
-    n_px = width of perivascular are in pixels
-    path = path to a folder pre-processed by REAVER
-    multidist = wether to perform extravasation calculation on multiple
-        distances (boolean 0/1)
-Output arguements:
-    results_tbl = table on n rows corresponding to n files in path. for
-        each file it contains all vessel segments median diameter and
-        extravasation (median red intensity in perivascular area). this
-        table alongside the n_px value is written to a mat file in the path
-        folder
-%}
+function results_tbl = ...
+    EB_analysis_entire_folder(n_px, path, normalizeRed, multidist)
+% Function to iterate over a directory of images pre-processed by REAVER, with 
+% Existing ".mat" analysis files, and compute EB leakage
+% Input arguements:
+%     n_px = width of perivascular are in pixels
+%     path = path to a folder pre-processed by REAVER
+%     NormalizeRed = boolean flag to determine if to normalize the red
+%         intensity in the perivascular area by the red intenity inside
+%     multidist = wether to perform extravasation calculation on multiple
+%         distances (boolean 0/1)
+% Output arguements:
+%     results_tbl = table on n rows corresponding to n files in path. for
+%         each file it contains all vessel segments median diameter and
+%         extravasation (median red intensity in perivascular area). this
+%         table alongside the n_px value is written to a mat file in the path
+%         folder
+
     %% Predefined params
-    if nargin < 3
+    if nargin < 4
         multidist = 0;
+    end
+    if nargin < 3
+        normalizeRed = 0;
     end
     if nargin < 2
         path = uigetdir();
@@ -49,25 +54,22 @@ Output arguements:
     results_tbl = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
         median_segment_diam_um,max_segment_diam_um,avg_red_px_val);
     %% Iterate over files
-    if multidist == 1  
-        parfor i = 1:n_files
-            fprintf('Processing file %d of %d\n',i,numel(verified_files));
-            % Calc extravasation for every segment.
-            metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px,1);
-            metric_st.image_name = image_name(i);
-            results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
-        end
-        res = struct('table',results_tbl,'n_px',n_px);
-        save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),'res');
-    else
-        parfor i = 1:n_files
-            fprintf('Processing file %d of %d\n',i,numel(verified_files));
-            % Calc extravasation for every segment.
-            metric_st = reaver_quantify_EB(fullfile(path,verified_files(i).name),n_px,0);
-            metric_st.image_name = image_name(i);
-            results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
-        end
-        res = struct('table',results_tbl,'n_px',n_px);
-        save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),'res');
+    parfor i = 1:n_files
+        fprintf('Processing file %d of %d\n',i,numel(verified_files));
+        % Calc extravasation for every segment.
+        metric_st = ...
+            reaver_quantify_EB(fullfile(path,verified_files(i).name),...
+            n_px, normalizeRed, multidist);
+        metric_st.image_name = image_name(i);
+        results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
+    end
+    res = struct('table',results_tbl,'n_px',n_px);
+    switch multidist
+        case 1
+            save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),...
+                'res');
+        case 0
+            save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),...
+                'res');
     end
 end

@@ -1,22 +1,23 @@
-function metric_st = reaver_quantify_EB(mat_path,n_px,diffu)
-%{
-Custom image processing and measurements extraction function.
-Input arguements:
-    mat_math = path to a .mat file containing the verified image
-               parameters, BW image and wireframe
-    n_px = Size of neighborhood around a blood vessel (in px)
-    diffu = determines if the function extracts the diffusin in multiple or
-                signle distance (0 = single, 1 = multiple)
-Output arguements:
-    metric_st = structure with all measurements. containing the following
-        fields:                   
-            'vessel_area_fraction'        
-            'vessel_length_um'            
-            'segments_diam_um'
-            'avg_red_px_val'
-    short_lbl_st = structure containing labels for metric_st measured
-                   parameters.
-%}
+function metric_st = reaver_quantify_EB(mat_path,n_px, normalizeRed, diffu)
+% Custom image processing and measurements extraction function.
+% Input arguements:
+%     mat_math = path to a .mat file containing the verified image
+%                parameters, BW image and wireframe
+%     n_px = Size of neighborhood around a blood vessel (in px)
+%     NormalizeRed = boolean flag to determine if to normalize the red
+%         intensity in the perivascular area by the red intenity inside
+%     diffu = determines if the function extracts the diffusin in multiple or
+%                 signle distance (0 = single, 1 = multiple)
+% Output arguements:
+%     metric_st = structure with all measurements. containing the following
+%         fields:                   
+%             'vessel_area_fraction'        
+%             'vessel_length_um'            
+%             'segments_diam_um'
+%             'avg_red_px_val'
+%     short_lbl_st = structure containing labels for metric_st measured
+%                    parameters.
+                   
 warning('off','imageio:tiffmexutils:libtiffWarning');
 
 if isempty(dir(mat_path))
@@ -66,9 +67,18 @@ metric_st.max_segment_diam_um = max_segment_diam_um;
 avg_red_px_val = cell(1,1);
 switch diffu
     case 0
-        avg_red_px_val{1,1} = calc_eb_ext(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+        avg_red_px_val{1,1} = ...
+            calc_eb_ext(rcind_seg_cell,...
+            all_seg_rads.max,st.derivedPic.BW_2,...
+            redIm,...
+            n_px,...
+            normalizeRed);
     case 1
-        avg_red_px_val{1,1} = calc_eb_ext_upto_n_px(rcind_seg_cell,all_seg_rads.max,st.derivedPic.BW_2, redIm, n_px);
+        avg_red_px_val{1,1} = ...
+            calc_eb_ext_upto_n_px(rcind_seg_cell,...
+            all_seg_rads.max,st.derivedPic.BW_2,...
+            redIm,...
+            n_px);
 end
 metric_st.avg_red_px_val = avg_red_px_val;
 end

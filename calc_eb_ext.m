@@ -1,23 +1,21 @@
 function eb_ext_in_segments = ...
     calc_eb_ext(rcind_seg_cell,all_seg_rads,bw_vessels, redIm, n_px, normFlag)
-%{
-    Function to calculate EB extravasation around deifferent vessel segments
-    according to previous vessel segmentation.
-    Input arguements:
-        rcind_seg_cell = cell array with every cell containing [row,col]
-            coordinates of a vessel segment
-        all_seg_rads = radii of segments. for dilation.
-        bw_vessels = processed binary image of blood vessles and background
-        redIm = image of EB channel
-        n_px = how many pixels of extravasation (use according to diffusion
-            theory)
-        normFlag = boolean switch to normalize by the red intensity inside
-            the vessel (default = no)
-    Output arguements:
-        eb_ext_in_segments = vector the length of number of segments.
-            Every element contains the average pixel value of a n_px 
-            neighborhood around the i-th segment in the EB image
-%}
+% Function to calculate EB extravasation around deifferent vessel segments
+% according to previous vessel segmentation.
+% Input arguements:
+%     rcind_seg_cell = cell array with every cell containing [row,col]
+%         coordinates of a vessel segment
+%     all_seg_rads = radii of segments. for dilation.
+%     bw_vessels = processed binary image of blood vessles and background
+%     redIm = image of EB channel
+%     n_px = how many pixels of extravasation (use according to diffusion
+%         theory)
+%     normFlag = boolean switch to normalize by the red intensity inside
+%         the vessel (default = no)
+% Output arguements:
+%     eb_ext_in_segments = vector the length of number of segments.
+%         Every element contains the average pixel value of a n_px 
+%         neighborhood around the i-th segment in the EB image
 eb_ext_in_segments = zeros(length(rcind_seg_cell),1); % Create a placeholder
 
 for n=1:size(rcind_seg_cell,1)  % loop through all segments
