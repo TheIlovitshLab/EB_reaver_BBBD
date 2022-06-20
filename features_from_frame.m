@@ -1,4 +1,4 @@
-function metric_st = reaver_quantify_EB(mat_path,n_px, normalizeRed, diffu)
+function metric_st = features_from_frame(mat_path,n_px, normalizeRed, diffu)
 % Custom image processing and measurements extraction function.
 % Input arguements:
 %     mat_math = path to a .mat file containing the verified image
@@ -63,7 +63,6 @@ metric_st.mean_segment_diam_um = mean_segment_diam_um;
 metric_st.median_segment_diam_um = median_segment_diam_um;
 metric_st.max_segment_diam_um = max_segment_diam_um;
 
-% TODO: Use maximal segment radius instead of median for dilation
 avg_red_px_val = cell(1,1);
 switch diffu
     case 0
@@ -81,5 +80,10 @@ switch diffu
             n_px);
 end
 metric_st.avg_red_px_val = avg_red_px_val;
+nans = isnan(avg_red_px_val{1});
+metric_st.avg_red_px_val{1}(nans) = [];
+metric_st.median_segment_diam_um{1}(nans) = [];
+metric_st.mean_segment_diam_um{1}(nans) = [];
+metric_st.max_segment_diam_um{1}(nans) = [];
 end
 

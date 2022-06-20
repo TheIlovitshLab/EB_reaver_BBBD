@@ -115,6 +115,43 @@ classdef EB_analysis
                     new_obj.segment_tbl.avg_red_px_val >= treat_th(i)) = 1;
             end
         end
+        function new_obj = match_histograms(obj)
+           % At each diameter group, remove the outliers from one of the 
+           % conditions (Conrtol/Test) to have equal number of vessel
+           % segments in both conditions.
+           control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+           ths = unique(ceil(obj.segment_tbl.median_segment_diam_um));
+           ths = [0,ths'];
+           new_obj = obj;
+           rm_rows = [];
+           for i = 1:length(ths)-1
+               cur_control = new_obj.segment_tbl.avg_red_px_val(...
+                   new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                   new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                   control_idx);
+               cur_test = new_obj.segment_tbl.avg_red_px_val(...
+                   new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                   new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                   ~control_idx); 
+               if numel(cur_control) > numel(cur_test)
+                   n_outliers = numel(cur_control)-numel(cur_test);
+                   [~,intensity_idx] = ...
+                       sort(abs(cur_control-mean(cur_control)));
+                   control_rows = find(control_idx);
+                   rm_rows = [rm_rows;...
+                       control_rows(intensity_idx(1:n_outliers))];
+               else
+                   n_outliers = numel(cur_test)-numel(cur_control);
+                   [~,intensity_idx] = ...
+                       sort(abs(cur_test-mean(cur_test)));
+                   test_rows = find(~control_idx);
+                   rm_rows = [rm_rows;...
+                       test_rows(intensity_idx(1:n_outliers))];
+               end
+           end
+           new_obj.segment_tbl(rm_rows,:) = [];
+        end
         %% Statistical analysis
         function [p,tbl,stats] = anova(obj)
             [p,tbl,stats] = anovan(obj.segment_tbl.avg_red_px_val,...
@@ -319,26 +356,27 @@ classdef EB_analysis
                         'FaceColor','#09425A');
                     hold on;
                     errorbar(1:2:(length(ths)*2+1),test_mu_median(1,:),...
-                        test_mu_median(2,:),test_mu_median(2,:),'LineStyle','none'); 
+                        test_mu_median(2,:),test_mu_median(2,:),...
+                        'LineStyle','none'); 
                     xticks(1:2:(length(ths)*2+1));
                     xticklabels(generate_xticks(ths));
-                    title({'EB intensity in perivascular area as function of the vessel diameter',...
-                        [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
+                    title({['EB intensity in perivascular area',...
+                        'as function of the vessel diameter'],...
+                        [num2str(obj.n_px*obj.UM_PX),...
+                        ' um perivascular area']});
                     xlabel('Vessel diameter [um]');
                     ylabel('Average red intensity in perivascular area [8bit]')
 
                     for i = 2:numel(ths)
-                       [~,p] = ttest2(test_groups{1},test_groups{i});
-                       maxy = max(sum(test_mu_median(1:2,:),1))*(1+i/20);
-                       line([0.5,(i-1)*2+1.5],maxy*[1,1]);
+                       [~,p] = ttest2(test_groups{i-1},test_groups{i});
                        st = sigstars(p);
-                       pos = (i-1)*2+1.5-length(st)*0.25;
-                       if strcmp(st,'ns')
-                           y_pos = maxy*1.02;
-                       else
+                       if ~strcmp(st,'ns')
+                           maxy = max(sum(test_mu_median(1:2,:),1))*(1+i/20);
+                           line([(i-1)*2,(i+1)*2],maxy*[1,1]);
+                           pos = (i-1)*2+1.5-length(st)*0.25;
                            y_pos = maxy*1.01;
+                           text(pos,y_pos,st);
                        end
-                       text(pos,y_pos,st);
                     end
                 case 2  % both groups
                     if length(ths) == 1
@@ -417,12 +455,15 @@ classdef EB_analysis
                     ylabel('Average red intensity in perivascular area [8bit]')
 
                     for i = 2:numel(ths)
-                       [~,p] = ttest2(control_groups{1},control_groups{i});
-                       maxy = max(sum(control_mu_median,1))*(0.8+i/20);
-                       line([0.5,(i-1)*2+1.5],maxy*[1,1]);
+                       [~,p] = ttest2(control_groups{i-1},control_groups{i});
                        st = sigstars(p);
-                       pos = (i-1)*2+1.5-length(st)*0.25;
-                       text(pos,maxy*1.01,st);
+                       if ~strcmp(st,'ns')
+                           maxy = max(sum(test_mu_median(1:2,:),1))*(1+i/20);
+                           line([(i-1)*2,(i+1)*2],maxy*[1,1]);
+                           pos = (i-1)*2+1.5-length(st)*0.25;
+                           y_pos = maxy*1.01;
+                           text(pos,y_pos,st);
+                       end
                     end
             end
         end

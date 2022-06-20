@@ -17,7 +17,9 @@ function eb_ext_in_segments = ...
 %         Every element contains the average pixel value of a n_px 
 %         neighborhood around the i-th segment in the EB image
 eb_ext_in_segments = zeros(length(rcind_seg_cell),1); % Create a placeholder
-
+if nargin < 6
+    normFlag = 0;
+end
 for n=1:size(rcind_seg_cell,1)  % loop through all segments
     se_wire = strel('disk',ceil(all_seg_rads(n)),0); % Create a specific structure element for wire dilation 
     lind_seg = sub2ind(size(bw_vessels), rcind_seg_cell{n}(:,1),rcind_seg_cell{n}(:,2));    % get all wire-frame elements of the segment (represent the middle-line)
@@ -28,9 +30,6 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     se_peri = strel('disk',ceil(n_px),0); % Create a specific structure element for perivascular dilation 
     dilated_n_wire = blockdilate(single_vessel_mask,se_peri); % Dilate the single vessel
     single_vessel_perivasc_mask = logical((dilated_n_wire | bw_vessels)-bw_vessels);
-    if nargin < 6
-        normFlag = 0;
-    end
     if normFlag ==1 
         eb_ext_in_segments(n) = ...
             double(median(redIm(single_vessel_perivasc_mask),'all'))./...
