@@ -1,5 +1,5 @@
 function results_tbl = ...
-    EB_analysis_entire_folder(n_px, path, normalizeRed, multidist)
+    EB_analysis_entire_folder(n_px, path, normalizeRed, diffu)
 % Function to iterate over a directory of images pre-processed by REAVER, with 
 % Existing ".mat" analysis files, and compute EB leakage
 % Input arguements:
@@ -18,7 +18,7 @@ function results_tbl = ...
 
     %% Predefined params
     if nargin < 4
-        multidist = 0;
+        diffu = 0;
     end
     if nargin < 3
         normalizeRed = 0;
@@ -59,17 +59,17 @@ function results_tbl = ...
         % Calc extravasation for every segment.
         metric_st = ...
             features_from_frame(fullfile(path,verified_files(i).name),...
-            n_px, normalizeRed, multidist);
+            n_px, normalizeRed, diffu);
         metric_st.image_name = image_name(i);
         results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
     end
     res = struct('table',results_tbl,'n_px',n_px);
-    switch multidist
-        case 1
-            save(fullfile(path,['EB_analysis_upto_',num2str(n_px),'px.mat']),...
-                'res');
-        case 0
-            save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),...
-                'res');
+    if diffu == 0
+        save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),...
+            'res');
+    else
+        save(fullfile(path,['EB_analysis_from_',num2str(diffu),'px_width_',...
+            num2str(n_px),'px.mat']),...
+            'res');
     end
 end
