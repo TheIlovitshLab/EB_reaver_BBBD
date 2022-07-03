@@ -1261,14 +1261,15 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 				% ...import it as a Tiff object
 				warning('off','MATLAB:imagesci:tiffmexutils:libtiffWarning')
 				t_file = Tiff([pathname,filename]) ;
-				
+                
 				% Create a blank matrix for the image to go
 				handles.basePic.data = [] ;
 				
 				% Read the image in channel by channel
 				for i = 1:length(info)
 					setDirectory(t_file,i)
-					handles.basePic.data = cat(3, handles.basePic.data, im2uint8(read(t_file))) ;
+					handles.basePic.data = ...
+                        cat(3, handles.basePic.data, uint8(rescale(read(t_file),0,255))) ;
 				end
 				warning('on','MATLAB:imagesci:tiffmexutils:libtiffWarning')
 				
@@ -1277,7 +1278,8 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 					handles.basePic.data(:,:,3) = 0 ;
 				end
 			else
-				handles.basePic.data = imread([pathname,filename]) ;
+				handles.basePic.data = ...
+                    rescale(imread([pathname,filename]),0,255) ;
 			end
 			
 			% Checking if image is gray
@@ -1430,7 +1432,8 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 					% Read the image in channel by channel
 					for i = 1:length(info)
 						setDirectory(t_file,i)
-						handles.basePic.data = cat(3, handles.basePic.data, im2uint8(read(t_file))) ;
+						handles.basePic.data = ...
+                            cat(3, handles.basePic.data, uint8(rescale(read(t_file),0,255))) ;
 					end
 					warning('on','MATLAB:imagesci:tiffmexutils:libtiffWarning')
 					% If the image only has 2 channels, create a 3rd 0 channel
@@ -1438,7 +1441,8 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 						handles.basePic.data(:,:,3) = 0 ;
 					end
 				else
-					handles.basePic.data = imread([pathname,filename]) ;
+					handles.basePic.data = ...
+                        rescale(imread([pathname,filename]),0,255) ;
 				end
 			%++++ End: Read Image
 

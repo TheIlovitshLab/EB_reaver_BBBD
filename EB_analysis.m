@@ -30,7 +30,7 @@ classdef EB_analysis
                 obj.UM_PX = um_px;
             end
         end
-        function new_obj = subarea(obj,area_name)
+        function [new_obj_sub, new_obj_exc]  = subarea(obj,area_name)
             % Create new object with only sub area of the brain specified
             % as a string. example: new_obj = obj.subarea('hypothalamus');
             % Inputs:
@@ -38,8 +38,10 @@ classdef EB_analysis
             %       extracted
             area_idx = cellfun(@(x) contains(lower(x),lower(area_name)),...
                 obj.segment_tbl.image_name);
-            new_obj = obj;
-            new_obj.segment_tbl(~area_idx,:) = [];
+            new_obj_sub = obj;
+            new_obj_sub.segment_tbl(~area_idx,:) = [];
+            new_obj_exc = obj;
+            new_obj_exc.segment_tbl(area_idx,:) = [];
         end
         function writecsv(obj,control_csv_filename,test_csv_filename,ths)
             % save control and test data to csv in a graphpad format
