@@ -23,7 +23,9 @@ function eb_ext_in_segments = ...
 %         neighborhood around the i-th segment in the EB image
 
 eb_ext_in_segments = zeros(length(rcind_seg_cell),1); % Create a placeholder
-% redIm = reshape(normalize(reshape(double(redIm),[],1),'range'), size(redIm));
+if normFlag == 1
+    redIm = rescale(double(redIm));
+end
 max_eb_inside = 0;
 if nargin < 6
     normFlag = 0;
@@ -48,12 +50,12 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
         logical((single_vessel_perivasc_mask | bw_vessels)-bw_vessels); % Make sure not to take anything thats' within a vessel
     in_vessel_mask = blockdilate(single_seg_bw,strel('disk',ceil(all_seg_rads(n)),0));
     in_vessel_mask = in_vessel_mask & bw_vessels;
-    if normFlag ==1 
-        eb_ext_in_segments(n) = ...
-            double(median(redIm(single_vessel_perivasc_mask),'all'))./...
-            double(median(redIm(in_vessel_mask),'all'));
-%         eb_ext_in_segments(n) = double(median(redIm(single_vessel_mask),'all'));
-    elseif n_px > 0
+%     if normFlag ==1 
+%         eb_ext_in_segments(n) = ...
+%             double(median(redIm(single_vessel_perivasc_mask),'all'))./...
+%             double(median(redIm(in_vessel_mask),'all'));
+% %         eb_ext_in_segments(n) = double(median(redIm(single_vessel_mask),'all'));
+    if n_px > 0
         eb_ext_in_segments(n) = ...
             double(median(redIm(single_vessel_perivasc_mask),'all'));
     else
