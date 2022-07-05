@@ -9,7 +9,7 @@ Output arguemrnts:
     eb_grouped = cell vector of length numel(th)+1, where each cell
     contains the eb values of segments belogning to the specific bin
 %}
-    eb_grouped = cell(length(th)+1,1);
+    eb_grouped = cell(length(th),1);
     diams_grouped = eb_grouped;
     th = [0,th];
     for i = 1:length(th)-1

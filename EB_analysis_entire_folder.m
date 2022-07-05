@@ -1,5 +1,5 @@
 function results_tbl = ...
-    EB_analysis_entire_folder(n_px, path, normalizeRed, diffu)
+    EB_analysis_entire_folder(n_px, path, normalizeRed, from_px)
 % Function to iterate over a directory of images pre-processed by REAVER, with 
 % Existing ".mat" analysis files, and compute EB leakage
 % Input arguements:
@@ -7,8 +7,8 @@ function results_tbl = ...
 %     path = path to a folder pre-processed by REAVER
 %     NormalizeRed = boolean flag to determine if to normalize the red
 %         intensity in the perivascular area by the red intenity inside
-%     multidist = wether to perform extravasation calculation on multiple
-%         distances (boolean 0/1)
+%     from_px = distance from vessel wall to start the eb extraction from
+%       [pixels]
 % Output arguements:
 %     results_tbl = table on n rows corresponding to n files in path. for
 %         each file it contains all vessel segments median diameter and
@@ -18,7 +18,7 @@ function results_tbl = ...
 
     %% Predefined params
     if nargin < 4
-        diffu = 0;
+        from_px = 0;
     end
     if nargin < 3
         normalizeRed = 0;
@@ -59,17 +59,19 @@ function results_tbl = ...
         % Calc extravasation for every segment.
         metric_st = ...
             features_from_frame(fullfile(path,verified_files(i).name),...
-            n_px, normalizeRed, diffu);
+            n_px, normalizeRed, from_px);
         metric_st.image_name = image_name(i);
         results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
     end
-    res = struct('table',results_tbl,'n_px',n_px);
-    if diffu == 0
-        save(fullfile(path,['EB_analysis_',num2str(n_px),'px.mat']),...
-            'res');
-    else
-        save(fullfile(path,['EB_analysis_from_',num2str(diffu),'px_width_',...
-            num2str(n_px),'px.mat']),...
-            'res');
+    res = struct('table',results_tbl,'n_px',n_px,'from_px',from_px);
+    str = 'EB_analysis_';
+    if from_px ~= 0
+        str = [str,'_from_',num2str(from_px),'_'];
     end
+    str = [str,num2str(n_px),'px'];
+    if normalizeRed
+        str = [str,'_N'];
+    end
+    str = [str,'.mat'];
+    save(fullfile(path,str),'res');
 end

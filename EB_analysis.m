@@ -3,7 +3,8 @@ classdef EB_analysis
     % perivascular area and same extraction method
     properties
         segment_tbl
-        n_px 
+        n_px
+        from_px
         UM_PX    
     end
     methods
@@ -23,6 +24,7 @@ classdef EB_analysis
             test_tbl.label = label;
             obj.segment_tbl = vertcat(control_tbl,test_tbl);
             obj.n_px = control.res.n_px;
+            obj.from_px = control.res.from_px;
             obj = obj.classify_opening;
             if nargin < 1
                 obj.UM_PX = 0.29288;    % Default
@@ -250,6 +252,59 @@ classdef EB_analysis
             end
             xlabel('median segment diameter [um]'); 
             ylabel('Average red pixel intensity [8bit]');
+        end
+        function violinplot(obj,ths)
+            % Implementation of violin plot
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            figure;
+            if nargin < 2   % No diameter thresholds specified
+                control_groups = ...
+                    obj.segment_tbl.avg_red_px_val(control_idx);
+                test_groups = ...
+                    obj.segment_tbl.avg_red_px_val(~control_idx);
+                control_mu_median = [mean(control_groups);
+                    std(control_groups)];
+                test_mu_median = [mean(test_groups);
+                    std(test_groups)];
+                control_groups = rmoutliers(control_groups);
+                test_groups = rmoutliers(test_groups);
+                ths = 0;
+                Violin({control_groups},1,'HalfViolin','left','ViolinColor',{[1,0,0]});
+                hold on;
+                Violin({test_groups},1,'HalfViolin','right','ViolinColor',{[0,0,1]});
+                xticks([]);
+                hold off;
+            else
+                [control_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(control_idx),ths);
+                [test_groups,~] = ...
+                    intogroups(obj.segment_tbl.avg_red_px_val(~control_idx),...
+                    obj.segment_tbl.median_segment_diam_um(~control_idx),ths);
+                control_mu_median = cellfun(@(x) [mean(x);std(x)],...
+                    control_groups,'UniformOutput',false);
+                control_mu_median = [control_mu_median{:}];
+                test_mu_median = cellfun(@(x) [mean(x);std(x)],...
+                    test_groups,'UniformOutput',false);
+                test_mu_median = [test_mu_median{:}];
+                % remove outliers
+                control_groups = cellfun(@(x) rmoutliers(x),...
+                    control_groups,'UniformOutput',false);
+                test_groups = cellfun(@(x) rmoutliers(x),...
+                    test_groups,'UniformOutput',false);
+                for i = 1:numel(control_groups)
+                    Violin(control_groups(i),i,'HalfViolin','left','ViolinColor',{[1,0,0]});
+                    hold on;
+                end
+                for i = 1:numel(test_groups)
+                    Violin(test_groups(i),i,'HalfViolin','right','ViolinColor',{[0,0,1]});
+                    hold on;
+                end
+                xticks([1:numel(control_groups)]);
+                xticklabels(generate_xticks(ths));
+                hold off;
+            end
         end
         function boxplot(obj,ths)
             % Box plot with 2 colors. one representing the control group
