@@ -487,7 +487,6 @@ classdef EB_analysis
                     title(sprintf('[%d,%d] px]',...
                         obj.from_px,obj.from_px+obj.n_px));
                     ylabel('Average red intensity in perivascular area [8bit]')
-
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
                     test_mu_median(1,:)-control_mu_median(1,:),0.25,...
@@ -544,89 +543,63 @@ classdef EB_analysis
             P.parse(varargin{:});
             showmode = strcmp(P.Results.Mode,'histogram');
             figure;
-            if nargin > 1 && ~isempty(ths) % Thresholds specifie
+            thresh_specified = nargin > 1 && ~isempty(ths);
+            if thresh_specified
                 control_groups = ...
                     intogroups(obj.segment_tbl(control_idx,:),ths);
                 test_groups = ...
                     intogroups(obj.segment_tbl(~control_idx,:),ths);   
-                            len = numel(ths);
+                len = numel(ths);
                 ths = [0,ths];
-                for i = 1:len-1
-                    subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
-                    if showmode
-                        histogram(control_groups{i},100,'FaceColor','#8c1515',...
-                            'Normalization','probability');
-                        hold on;
-                        histogram(test_groups{i},100,'FaceColor','#09425A',...
-                            'Normalization','probability');
-                    else
-                        [control_density, control_vals] =...
-                            ksdensity(control_groups{i});
-                        [test_density, test_vals] =...
-                            ksdensity(test_groups{i});
-                        a1 = area(control_vals,...
-                            control_density./sum(control_density),...
-                            'FaceColor','#8c1515');
-                        a1.FaceAlpha = 0.5;
-                        hold on;
-                        a2 = area(test_vals,...
-                            test_density./sum(test_density),...
-                            'FaceColor','#09425A');
-                        a2.FaceAlpha = 0.5;
-                    end
-                    xlabel('EB intensity [AU]');
-                    ylabel('Probability');
-                    legend('control','MB + FUS');
-                    if isnumeric(numstd)
-                       controls = control_groups{i};
-                       xline(mean(controls)+numstd*std(controls),...
-                           'LineWidth',2,'LineStyle','--');
-                       legend('control','MB + FUS',...
-                           ['Control mean + ',num2str(numstd),' SDs']);
-                    end
-                    hold off; 
-                    title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
-                end
             else
                 control_groups =...
                     obj.segment_tbl.median_red(control_idx);
                 test_groups = ...
                     obj.segment_tbl.median_red(~control_idx);
+                len = 2;
+            end
+            for i = 1:len-1
+                if thresh_specified
+                    subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
+                    cur_controls = control_groups{i};
+                    cur_tests = test_groups{i};
+                    title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
+                else
+                    cur_controls = control_groups;
+                    cur_tests = test_groups;
+                end
                 if showmode
-                    histogram(control_groups,100,'FaceColor','#8c1515',...
+                    histogram(cur_controls,100,'FaceColor','#8c1515',...
                         'Normalization','probability');
                     hold on;
-                    histogram(test_groups,100,'FaceColor','#09425A',...
+                    histogram(cur_tests,100,'FaceColor','#09425A',...
                         'Normalization','probability');
                 else
                     [control_density, control_vals] =...
-                        ksdensity(control_groups);
+                        ksdensity(cur_controls);
                     [test_density, test_vals] =...
-                        ksdensity(test_groups);
+                        ksdensity(cur_tests);
                     a1 = area(control_vals,...
-                        control_density./sum(control_density),...
+                        100*control_density./sum(control_density),...
                         'FaceColor','#8c1515');
                     a1.FaceAlpha = 0.5;
                     hold on;
                     a2 = area(test_vals,...
-                        test_density./sum(test_density),...
+                        100*test_density./sum(test_density),...
                         'FaceColor','#09425A');
                     a2.FaceAlpha = 0.5;
                 end
+                xlabel('EB intensity [A.U.]');
+                ylabel('# Vessels [%]');
+                legend('control','MB + FUS');
                 if isnumeric(numstd)
-                   controls = control_groups;
-                   xline(mean(controls)+numstd*std(controls),...
-                         'LineWidth',2,'LineStyle','--');
+                   xline(mean(cur_controls)+numstd*std(cur_controls),...
+                       'LineWidth',2,'LineStyle','--');
                    legend('control','MB + FUS',...
                        ['Control mean + ',num2str(numstd),' SDs']);
-                else
-                    legend('Control','Test');
                 end
-                xlabel('EB intensity [AU]');
-                ylabel('Probability');
+                xlim([0,1]);
                 hold off; 
-                title({'Average red intenity in perivascular area',...
-                    'in all vessel diameters'}); 
             end
         end
         function diamHist(obj)
@@ -647,30 +620,35 @@ classdef EB_analysis
             title('Blood vessel diameter histogram'); 
             p = anova1(obj.segment_tbl.median_segment_diam_um,control_idx)
         end
-        function openedHist(obj,ths,intrabrain)
+        function perc_tbl = openedHist(obj,varargin)
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
             %   ths - array of diameters to be used as diameter ..
             %       groups.
-            %   intrabrain - logical flag:
+            %   Intrabrain - logical flag:
             %       0 = plot all brains together,
             %       1 = plot each brain seperatly
-            if nargin < 2
-               ths = 2:15;
-            end
-            if nargin < 1
-                intrabrain = 0;
-            end
+            %   Errorbars - 'on' or 'off' (default), only shows errorbars
+            %       if intrabrain is set to 1
+            % Output:
+            %   perc_tbl = opening percentage table by dimeter and frame
+            
+            P = inputParser();
+            P.addOptional('ths',[2:10],@(x) isnumeric(x));
+            P.addParameter('Intrabrain',0,@(x) sum(ismember(x,[0,1])) == 1);
+            P.addParameter('Errorbars','off',...
+                @(x) sum(strcmp(x,{'on','off'})) == 1);
+            P.parse(varargin{:})
+            
+            ths = P.Results.ths;
+            intrabrain = P.Results.Intrabrain;
+            
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
-%             frame_label = cellfun(@(x) textscan(x,'%s','Delimiter','_'),...
-%                 obj.segment_tbl.image_name);
-%             animal_names = cellfun(@(x) x{1},frame_label,'UniformOutput',...
-%                 false);
-            test_animals = unique(obj.segment_tbl.image_name(~control_idx));
+            test_frames = unique(obj.segment_tbl.image_name(~control_idx));
             ths = [0, ths];
             len_diam_groups = length(ths)-1;
-            n_animals = numel(test_animals);
+            n_animals = numel(test_frames);
             perc = zeros(len_diam_groups,n_animals);
             vessel_count_per_brain = perc;
             for i = 1:len_diam_groups
@@ -678,7 +656,7 @@ classdef EB_analysis
                     in_group = ...
                         obj.segment_tbl.median_segment_diam_um >= ths(i) &...
                         obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
-                        strcmp(obj.segment_tbl.image_name,test_animals(j));
+                        strcmp(obj.segment_tbl.image_name,test_frames(j));
                     vessel_count_per_brain(i,j) = sum(in_group);
                     open_temp = in_group & obj.segment_tbl.opening;
                     perc(i,j) = 100*(sum(open_temp)/sum(in_group));
@@ -688,21 +666,16 @@ classdef EB_analysis
                 case 0
                     % Preform whole group analysis
                     bar(mean(perc,2,'omitnan'),0.5,'FaceColor','#009779');
-%                     hold on;
-%                     errorbar(1:len_diam_groups,mean(perc,2,'omitnan'),...
-%                                 std(perc,0,2),std(perc,0,2,'omitnan'),'k',...
-%                                 'LineStyle','none');
-%                     for i = 1:len_diam_groups-1
-%                        [~,p] = ttest2(perc(i,:),perc(i+1,:));
-%                        maxy = max([max(perc(i,:)),max(perc(i+1,:))]);
-%                        x_cord = i-1;
-%                        line([0.75,2.25]+x_cord,(maxy*1.05)*[1,1]);
-%                        text(x_cord+0.75,maxy*1.08,sigstars(p));
-%                     end
+                    if strcmp(P.Results.Errorbars,'on')
+                        hold on;
+                        errorbar(1:len_diam_groups,mean(perc,2,'omitnan'),...
+                                    [],std(perc,0,2,'omitnan'),'k',...
+                                    'LineStyle','none');
+                    end
                 case 1
                     subplot(2,2,2)
                     bar(100*perc./max(perc,[],1),0.5);
-                    legend(test_animals)
+                    legend(test_frames)
                     xlabel('Blood vessel diameter [um]'); 
                     xticklabels(generate_xticks(ths(2:end)));
                     ylabel('Open vessel fraction / max Opened vessel fraction');
@@ -710,7 +683,7 @@ classdef EB_analysis
                         'Normalized by maximal percentage'});
                     subplot(2,2,3)
                     bar(perc./sum(vessel_count_per_brain,1),0.5);
-                    legend(test_animals)
+                    legend(test_frames)
                     xlabel('Blood vessel diameter [um]'); 
                     xticklabels(generate_xticks(ths(2:end)));
                     ylabel('Total number of opened vessels');
@@ -718,7 +691,7 @@ classdef EB_analysis
                         'Normalized by total number of vessels in the brain'});
                     subplot(2,2,4)
                     bar(perc./vessel_count_per_brain,0.5);
-                    legend(test_animals)
+                    legend(test_frames)
                     xlabel('Blood vessel diameter [um]'); 
                     xticklabels(generate_xticks(ths(2:end)));
                     ylabel('Total number of opened vessels');
@@ -726,12 +699,15 @@ classdef EB_analysis
                         'Normalized by number of vessels in group'});
                     subplot(2,2,1)
                     bar(perc,0.5);
-                    legend(test_animals)
+                    legend(test_frames)
             end
             xlabel('Blood vessel diameter [um]'); 
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened vessel fraction as function of diameter'); 
+            
+            perc_tbl = array2table(perc,'VariableNames',test_frames,...
+                'RowNames',generate_xticks(ths(2:end)));
         end
         function regionHistogram(obj)
            % Return the region distribution of frames from each brain
