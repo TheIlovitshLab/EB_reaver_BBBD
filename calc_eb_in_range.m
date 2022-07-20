@@ -9,7 +9,7 @@ function eb_ext_in_segments = ...
 % Function to calculate EB extravasation around deifferent vessel segments
 % according to previous vessel segmentation. return statistics for the 
 % extravasation in the range (from_px, from_px + n_px] around the vessel
-% Input arguements:
+% Inputs:
 %     rcind_seg_cell = cell array with every cell containing [row,col]
 %         coordinates of a vessel segment
 %     all_seg_rads = radii of segments. for dilation.
@@ -18,7 +18,7 @@ function eb_ext_in_segments = ...
 %     from_px = the starting distance in pixels
 %     n_px = how many pixels of extravasation
 %     normFlag  = Boolean flag to normalize image to range of [0,1]
-% Output arguements:
+% Output:
 %     eb_ext_in_segments = vector of size n_segments where each element
 %        contains the median pixel value of a (j/10)*n_px 
 %         neighborhood around the i-th segment in the EB image
@@ -57,13 +57,13 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
     else
         eb_ext_in_segments(n) = double(median(redIm(in_vessel_mask),'all'));
     end
-    % Visualization if needed for debugging and n_px optimzation
-%     extra_vessel_red = redIm.*uint8(~bw_vessels); % remove vessles from red channel
-%     k = cat(3,extra_vessel_red,zeros(size(extra_vessel_red)),...
-%         2^6.*uint8(single_vessel_perivasc_mask));
-%     k = k + 2^8*uint8(repmat(single_seg_bw,1,1,3));
+%     Visualization if needed for debugging and n_px optimzation
+%     extra_vessel_red = redIm.*double(~bw_vessels); % remove vessles from red channel
+%     k = cat(3,uint8(255*extra_vessel_red),zeros(size(extra_vessel_red)),...
+%         ((2^6)-1)*uint8(single_vessel_perivasc_mask));
+%     k = k + ((2^8)-1)*uint8(repmat(single_seg_bw,1,1,3));
 %     imshow(k); 
 %     pause(0.5);
-    %
+%     
 end
 end

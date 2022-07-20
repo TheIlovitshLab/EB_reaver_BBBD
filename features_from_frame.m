@@ -1,6 +1,6 @@
 function metric_st = features_from_frame(mat_path,n_px, normalizeRed, diffu)
 % Custom image processing and measurements extraction function.
-% Input arguements:
+% Inputs:
 %     mat_math = path to a .mat file containing the verified image
 %                parameters, BW image and wireframe
 %     n_px = Size of neighborhood around a blood vessel (in px)
@@ -8,7 +8,7 @@ function metric_st = features_from_frame(mat_path,n_px, normalizeRed, diffu)
 %         intensity in each frame to a range of [0,1]
 %     diffu = determines if the function extracts the diffusin in multiple or
 %                 signle distance (0 = single, 1 = multiple)
-% Output arguements:
+% Output:
 %     metric_st = structure with all measurements. containing the following
 %         fields:                   
 %             'vessel_length_um'            
