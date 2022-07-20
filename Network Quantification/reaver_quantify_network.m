@@ -61,7 +61,7 @@ rcind_seg_cell = skel_2_linesegs(st.derivedPic.wire,...
 metric_st.segment_count = size(rcind_seg_cell,1);
 
 metric_st.mean_segment_length_um = mean(cellfun(@(x) size(x,1),rcind_seg_cell)).*umppix;
-metric_st.mean_tortuosity = mean(rcind_seg_tortuosity(rcind_seg_cell));
+% metric_st.mean_tortuosity = mean(rcind_seg_tortuosity(rcind_seg_cell));
 metric_st.mean_valency = size(st.derivedPic.branchpoints,1)./size(rcind_seg_cell,1);
 
 
@@ -70,11 +70,14 @@ metric_st.mean_valency = size(st.derivedPic.branchpoints,1)./size(rcind_seg_cell
 % Measure segment radii and record diameter
 [all_seg_rads, ~] = measure_segment_rad(rcind_seg_cell,...
     st.derivedPic.BW_2, fliplr(st.derivedPic.endpoints));
-all_seg_diams = 2.*all_seg_rads+1;  %Multiply by 2 and add the pixel for the center point to get the diameter
+all_seg_diams = 2.*all_seg_rads.median+1;  %Multiply by 2 and add the pixel for the center point to get the diameter
 metric_st.mean_segment_diam_um = mean(all_seg_diams) .* (fov_um ./ st.imageSize(1));
 all_segment_diam_um = cell(1,1);
 all_segment_diam_um{1,1} = all_seg_diams .* (fov_um ./ st.imageSize(1));
 metric_st.all_segment_diam_um = all_segment_diam_um;
+all_segment_len_um = cell(1,1);
+all_segment_len_um{1,1} = cellfun(@(x) size(x,1),rcind_seg_cell).*umppix;
+metric_st.all_segment_len_um = all_segment_len_um;
 
 % Short hand labels for plotting/display
 short_lbl_st.vessel_area_fraction = 'VAF';
@@ -83,10 +86,11 @@ short_lbl_st.branchpoint_count = 'BP Count';
 short_lbl_st.segment_count = 'Segment Count';
 % short_lbl_st.bp_p_segments = 'BP/ Segments';
 short_lbl_st.mean_segment_length_um = 'Mean Segment Len. (um)';
-short_lbl_st.mean_tortuosity = 'Tortuosity';
+% short_lbl_st.mean_tortuosity = 'Tortuosity';
 short_lbl_st.mean_valency = 'Valency';
-short_lbl_st.mean_segment_diam_um = 'Mean Segment Diam (um)';
-short_lbl_st.all_segment_diam_um = 'All Segment Diam (um)';
+short_lbl_st.mean_segment_diam_um = 'Mean Segment Diam. (um)';
+short_lbl_st.all_segment_diam_um = 'All Segment Diam. (um)';
+short_lbl_st.all_segment_len_um = 'All Segment Len. (um)';
 
 % Build adjacency matrix
 % https://www.nas.ewi.tudelft.nl/people/Piet/papers/TUDreport20111111_MetricList.pdf
