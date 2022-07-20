@@ -1,4 +1,4 @@
-function results_tbl = ...
+function file_path = ...
     EB_analysis_entire_folder(n_px, path, normalizeRed, from_px)
 % Function to iterate over a directory of images pre-processed by REAVER, with 
 % Existing ".mat" analysis files, and compute EB leakage
@@ -46,32 +46,35 @@ function results_tbl = ...
     %% create placeholders
     n_files = numel(verified_files);
     image_name = {verified_files.name}';
-    vessel_area_fraction = zeros(n_files,1);
-    mean_segment_diam_um = cell(n_files,1);
     median_segment_diam_um = cell(n_files,1);
     max_segment_diam_um = cell(n_files,1);
-    avg_red_px_val = cell(n_files,1);
-    results_tbl = table(image_name,vessel_area_fraction,mean_segment_diam_um,...
-        median_segment_diam_um,max_segment_diam_um,avg_red_px_val);
+    median_red = cell(n_files,1);
+    segment_len_um = cell(n_files,1);
+    results_tbl = ...
+        table(image_name,median_segment_diam_um,...
+        max_segment_diam_um,segment_len_um,...
+        median_red);
     %% Iterate over files
-    parfor i = 1:n_files
+    for i = 1:n_files
         fprintf('Processing file %d of %d\n',i,numel(verified_files));
         % Calc extravasation for every segment.
         metric_st = ...
             features_from_frame(fullfile(path,verified_files(i).name),...
             n_px, normalizeRed, from_px);
         metric_st.image_name = image_name(i);
-        results_tbl(i,:) = struct2table(orderfields(metric_st,[6,1,2,3,4,5]));
+        results_tbl(i,:) = ...
+            struct2table(orderfields(metric_st,[5,1,2,3,4]));
     end
     res = struct('table',results_tbl,'n_px',n_px,'from_px',from_px);
     str = 'EB_analysis_';
     if from_px ~= 0
-        str = [str,'_from_',num2str(from_px),'_'];
+        str = [str,'from_',num2str(from_px),'px_'];
     end
-    str = [str,num2str(n_px),'px'];
+    str = [str,'_to_',num2str(from_px+n_px),'px'];
     if normalizeRed
         str = [str,'_N'];
     end
     str = [str,'.mat'];
-    save(fullfile(path,str),'res');
+    file_path = fullfile(path,str);
+    save(file_path,'res');
 end

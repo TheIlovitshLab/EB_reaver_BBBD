@@ -1,5 +1,5 @@
-function eb_ext_in_segments = ...
-    calc_eb_in_range(rcind_seg_cell,...
+function [eb_ext_in_segments,circularities] = ...
+    calc_eb_and_circularity(rcind_seg_cell,...
     all_seg_rads,...
     bw_vessels,...
     redIm,...
@@ -24,12 +24,15 @@ function eb_ext_in_segments = ...
 %         neighborhood around the i-th segment in the EB image
 
 eb_ext_in_segments = zeros(length(rcind_seg_cell),1); % Create a placeholder
+circularities = zeros(length(rcind_seg_cell),1);
+
 if nargin < 6
     normFlag = 0;
 end
 if normFlag == 1
     redIm = rescale(double(redIm));
 end
+% max_eb_inside = 0;
 
 se_from = strel('disk',from_px,0); 
 se_to = strel('disk',n_px,0); 
@@ -51,12 +54,26 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
         logical((single_vessel_perivasc_mask | bw_vessels)-bw_vessels); % Make sure not to take anything thats' within a vessel
     in_vessel_mask = blockdilate(single_seg_bw,strel('disk',ceil(all_seg_rads(n)),0));
     in_vessel_mask = in_vessel_mask & bw_vessels;
+    props = regionprops(in_vessel_mask,'Area','Perimeter');
+    if numel(props) > 1
+        % If there are multiple areas only take the largest
+        [~,I] = sort([props.Area]);
+        props = props(I(end),:);
+    end
+    circularities(n) = 4*pi*props.Area/(props.Perimeter^2);
+%     if normFlag ==1 
+%         eb_ext_in_segments(n) = ...
+%             double(median(redIm(single_vessel_perivasc_mask),'all'))./...
+%             double(median(redIm(in_vessel_mask),'all'));
+% %         eb_ext_in_segments(n) = double(median(redIm(single_vessel_mask),'all'));
     if n_px > 0
         eb_ext_in_segments(n) = ...
             double(median(redIm(single_vessel_perivasc_mask),'all'));
     else
         eb_ext_in_segments(n) = double(median(redIm(in_vessel_mask),'all'));
     end
+%     max_eb_cur = max(redIm(single_vessel_mask),[],'all');
+%     max_eb_inside = max([max_eb_inside, max_eb_cur]);
     % Visualization if needed for debugging and n_px optimzation
 %     extra_vessel_red = redIm.*uint8(~bw_vessels); % remove vessles from red channel
 %     k = cat(3,extra_vessel_red,zeros(size(extra_vessel_red)),...
@@ -66,4 +83,5 @@ for n=1:size(rcind_seg_cell,1)  % loop through all segments
 %     pause(0.5);
     %
 end
+% eb_ext_in_segments = eb_ext_in_segments./double(max(redIm,[],'all'));
 end

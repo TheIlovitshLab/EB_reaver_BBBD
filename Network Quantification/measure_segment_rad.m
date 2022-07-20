@@ -1,5 +1,5 @@
-function [all_seg_rads, index_tbl] =...
-    measure_segment_rad(rcind_seg_cell,bw_seg,rc_ep)
+function all_seg_rads =...
+    measure_segment_rad(rcind_seg_cell,bw_seg)
 %{
     Function to measure the mean radius of each segment
     Input arguements:
@@ -10,33 +10,24 @@ function [all_seg_rads, index_tbl] =...
         rc_ep = [row,col] coordinates of all end points
     Output arguements:
         all_seg_rads = table with number of rows equal to number of
-            segments, every row contains the mean, max and min redius of
+            segments, every row contains the median and max redius of
             that segment
 %}
     
-% linearize indices
-lind_ep = sub2ind(size(bw_seg), rc_ep(:,1), rc_ep(:,2));
-
-ed_gs = bwdist(~bw_seg);    % for each point calculate the distance to the nearest black point (background).
+d_nn = bwdist(~bw_seg);    % for each point calculate the distance to the nearest black point (background).
    
-mean_seg_rads = zeros(1, size(rcind_seg_cell,1));
 max_seg_rads = zeros(1, size(rcind_seg_cell,1));
-min_seg_rads = zeros(1, size(rcind_seg_cell,1));
 median_seg_rads = zeros(1, size(rcind_seg_cell,1));
 
-is_ep_seg = false(1, size(rcind_seg_cell,1));
 for n=1:size(rcind_seg_cell,1)  % loop through all segments
     lind_seg = sub2ind(size(bw_seg), rcind_seg_cell{n}(:,1),rcind_seg_cell{n}(:,2));    % get all wire-frame elements of the segment (represent the middle-line)
-    mean_seg_rads(n) = mean(ed_gs(lind_seg));    % Average distance between mid-line and vessel edge (gives the average vessel radius)
-    max_seg_rads(n) = max(ed_gs(lind_seg));    
-    min_seg_rads(n) = min(ed_gs(lind_seg));    
-    median_seg_rads(n) = median(ed_gs(lind_seg));
-    % Are the first or last segment points also an endpoint
-    is_ep_seg(n) = ~isempty(intersect([lind_seg(1) lind_seg(end)],lind_ep));
+    max_seg_rads(n) = max(d_nn(lind_seg));    
+    median_seg_rads(n) = median(d_nn(lind_seg));
+    % Measure circularity
+    
 end
-all_seg_rads = table(mean_seg_rads',min_seg_rads',max_seg_rads',median_seg_rads',...
-    'VariableNames',{'mean','min','max','median'});
-index_tbl.end_seg_idx = is_ep_seg;
-
+all_seg_rads = ...
+    table(max_seg_rads',median_seg_rads',...
+    'VariableNames',{'max','median'});
 end
 

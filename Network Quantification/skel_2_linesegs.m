@@ -1,20 +1,18 @@
 function rcind_seg_cell = skel_2_linesegs(sp_wire,rc_bp,rc_ep)
-% TODO: improve segment detection!
-%{
-Function to extract all segments (longer than 5 px) from a wire frame. for
-each segment coordinates of all points in segment are saved.
+% Function to extract all segments (longer than 5 px) from a wire frame. for
+% each segment coordinates of all points in segment are saved.
+% 
+% Input arguements:
+%     sp_wire = vessel wireframe, logical array with dimensions equal to 
+%                 those of the image.
+%     rc_bp = branchpoint coordinates specified as [row,column] couples vector
+%     rc_ep = endpoints coordinates specified as [row,column] couples vector
+% 
+% Output arguements:
+%     rcind_seg_cell = vertical cell array with every cell containing 
+%                     [row, col] coordinates of all points belonging to that
+%                     segment
 
-Input arguements:
-    sp_wire = vessel wireframe, logical array with dimensions equal to 
-                those of the image.
-    rc_bp = branchpoint coordinates specified as [row,column] couples vector
-    rc_ep = endpoints coordinates specified as [row,column] couples vector
-
-Output arguements:
-    rcind_seg_cell = vertical cell array with every cell containing 
-                    [row, col] coordinates of all points belonging to that
-                    segment
-%}
 % Get wire/skeleton and trace
 bw_init_skel = full(sp_wire);
 bw_skel_index = 1:numel(bw_init_skel);
