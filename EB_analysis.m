@@ -172,13 +172,7 @@ classdef EB_analysis
            end
            new_obj.segment_tbl(rm_rows,:) = [];
         end
-        %% Statistical analysis
-        function [p,tbl,stats] = anova(obj)
-            [p,tbl,stats] = anovan(obj.segment_tbl.median_red,...
-                {obj.segment_tbl.median_segment_diam_um, obj.segment_tbl.label},...
-                'continuous',[1],'varnames',{'diameter','label'},...
-                'model','interaction');
-        end
+        
         %% Plotting functions
         function scatterPlot(obj)
             % Simple scatter plot of all the vessel segments as 2D points 
@@ -195,27 +189,27 @@ classdef EB_analysis
                 obj.segment_tbl.median_red(~control_idx));
 %                 'c','#09425A');
             legend('control','MB + FUS');
-            title(sprintf('[%d,%d] px]',...
+            title(sprintf('[%d,%d] px',...
                 obj.from_px,obj.from_px+obj.n_px));
             xlabel('median segment diameter [um]'); 
-            ylabel('Average red pixel intensity');
+            ylabel('Median red pixel intensity [A.U.]');
         end
-        function fitplot(obj,fittype,ths)
+        function fitplot(obj,ths, fitType)
             % line plot with two lines representing the control and test
             % samples in the diameter-extravasation plane, each line is
             % added with the error bars.
             % Inputs:
-            %   fittype (optional)- fittype object to fit the data.
+            %   ths (optional)- array of diameters to be used as x-axis.
+            %       vessels with diameter larger than ths(end) will not be
+            %       presented.
+            %   fitType (optional)- fittype object to fit the data.
             %       specifing this will add the fitted equations to the plot.
             %       different fits can be specified to the control and test
             %       via a cell array of 1 x 2. example {'poly1','poly2'}
             %       will fit th control data with a linear equation and the
             %       test data with a quadratic equation.
-            %   ths (optional)- array of diameters to be used as x-axis.
-            %       vessels with diameter larger than ths(end) will not be
-            %       presented.
-            if nargin < 3
-                ths = 1:15;
+            if nargin < 2
+                ths = 2:10;
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
@@ -230,9 +224,9 @@ classdef EB_analysis
             errorbar(control_red,control_red_std,'Color','#8c1515');...
                 hold on; errorbar(test_red,test_red_std,'Color','#09425A');
             if nargin >= 2
-                if isa(fittype,'char')
-                    tmp = fittype;
-                    fittype = cell(1,2); fittype(:) = cellstr(tmp);
+                if isa(fitType,'char')  % if user specified a single fitType object for both groups
+                    tmp = fitType;
+                    fitType = cell(1,2); fitType(:) = cellstr(tmp);
                 end
                 control_median_diams = ...
                     obj.segment_tbl.median_segment_diam_um(control_idx);
@@ -247,13 +241,13 @@ classdef EB_analysis
                     control_median_diams <= ths(end)),...
                     control_eb(control_median_diams >= ths(1) &...
                     control_median_diams <= ths(end))...
-                    ,fittype{1});
+                    ,fitType{1});
                 [f2,gof2] = ...
                     fit(test_median_diams(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end)),...
                     test_eb(test_median_diams >= ths(1) &...
                     test_median_diams <= ths(end))...
-                    ,fittype{2});
+                    ,fitType{2});
                 plot(f1)
                 plot(f2)
                 h= get(gca, 'Children');
@@ -266,10 +260,18 @@ classdef EB_analysis
                 legend('control','MB + FUS');
             end
             xlabel('median segment diameter [um]'); 
-            ylabel('Average red pixel intensity [8bit]');
+            ylabel('Median red pixel intensity [A.U.]');
         end
         function violinplot(obj,ths,varargin)
             % Implementation of violin plot
+            % Inputs:
+            %   ths (optional)- array of diameters to be used as x-axis.
+            %       vessels with diameter larger than ths(end) will not be
+            %       presented. if ths not specified a single violin will be
+            %       plotted for all vessel diameters
+            %   varargin - input arguements of the varargin function by
+            %       B. Bechtold
+            %       (https://github.com/bastibe/Violinplot-Matlab)
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             figure;
@@ -311,52 +313,15 @@ classdef EB_analysis
                 end
                 xticks([1:numel(control_groups)]);
                 xticklabels(generate_xticks(ths));
+                xlabel('Diameter [um]');
                 hold off;
             end
-        end
-        function boxplot(obj,ths)
-            % Box plot with 2 colors. one representing the control group
-            % and the other representing the test group.
-            % Inputs:
-            %   ths (optional)- array of diameters to be used as x-axis.
-            %       vessels with diameter larger than ths(end) will not be
-            %       presented.
-            control_idx = cellfun(@(x) strcmp(x,'control'),...
-                obj.segment_tbl.label);
-            if nargin < 2
-                ths = 0;
-                median_control_eb = ...
-                    obj.segment_tbl.median_red(control_idx);
-                median_test_eb = ...
-                    obj.segment_tbl.median_red(~control_idx);
-                boxplot(median_control_eb,...
-                    'Positions',10,...
-                    'Widths',5);
-                hold on;
-                boxplot(median_test_eb,...
-                    'Positions',20,...
-                    'Widths',5);
-                xticks([10,20]);
-                xticklabels({'Control','Test'});
-            else
-                median_control_eb = ...
-                    intogroups(obj.segment_tbl(control_idx,:),ths);
-                median_test_eb = ...
-                    intogroups(obj.segment_tbl(~control_idx,:),ths);
-                boxplot2(median_control_eb,...
-                    'Positions',(ths-1).*20+10,...
-                    'Widths',5*ones(1,length(ths)+1));
-                hold on;
-                boxplot2(median_test_eb,...
-                    'Positions',(ths-1).*20+15,...
-                    'Widths',5*ones(1,length(ths)+1));
-                xticks((ths-1).*20+12.5);
-                xticklabels(cellfun(@(x) num2str(x),num2cell(ths),...
-                    'UniformOutput',false));
-            end
-            title(sprintf('[%d,%d] px]',...
-                obj.from_px,obj.from_px+obj.n_px));
-            ylabel('Average red pixel intensity');
+            ylabel('Median red intensity in perivscular area [A.U.]');
+            ax = gca;
+            ch = get(ax,'Children');
+            red_envalope = ch(end-1);
+            blue_envalope = ch(7);
+            legend([red_envalope,blue_envalope],{'control','MB + FUS'})
         end
         function barplot(obj,ths,groups)
             % Bar plot with significance stars.
@@ -423,7 +388,7 @@ classdef EB_analysis
                     title(sprintf('[%d,%d] px]',...
                         obj.from_px,obj.from_px+obj.n_px));
                     xlabel('Vessel diameter [um]');
-                    ylabel('Average red intensity in perivascular area [8bit]')
+                    ylabel('Median red intensity in perivascular area [A.U.]')
 
                     for i = 2:numel(ths)
                        [~,p] = ttest2(test_groups{i-1},test_groups{i});
@@ -486,7 +451,7 @@ classdef EB_analysis
                     legend([b1,b2],'control','MB + FUS');
                     title(sprintf('[%d,%d] px]',...
                         obj.from_px,obj.from_px+obj.n_px));
-                    ylabel('Average red intensity in perivascular area [8bit]')
+                    ylabel('Median red intensity in perivascular area [A.U.]')
                 case 0  % diffrence
                     bar(0.75:2:(length(ths)*2+0.75),...
                     test_mu_median(1,:)-control_mu_median(1,:),0.25,...
@@ -496,7 +461,7 @@ classdef EB_analysis
                     title({'treatment-control',...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('test-control difference in average red intensity [8bit]')
+                    ylabel('test-control difference in Median red intensity [A.U.]')
                 case -1  % only control
                     bar(1:2:(length(ths)*2),control_mu_median(1,:),0.5,...
                         'FaceColor','#8c1515');
@@ -510,7 +475,7 @@ classdef EB_analysis
                         ' as function of the vessel diameter'],...
                         [num2str(obj.n_px*obj.UM_PX),' um perivascular area']});
                     xlabel('Vessel diameter [um]');
-                    ylabel('Average red intensity in perivascular area [8bit]')
+                    ylabel('Median red intensity in perivascular area [A.U.]')
 
                     for i = 2:numel(ths)
                        [~,p] = ttest2(control_groups{i-1},control_groups{i});
@@ -538,12 +503,16 @@ classdef EB_analysis
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             P = inputParser();
+            P.addOptional('ths',[],@(x) isnumeric(x));
+            P.addOptional('numstd',[],@(x) isa(x,'double'));
             P.addParameter('Mode','histogram',...
                 @(x) sum(strcmp(x,{'histogram','pdf'}))==1);
-            P.parse(varargin{:});
+            P.parse(ths,numstd,varargin{:});
             showmode = strcmp(P.Results.Mode,'histogram');
+            ths = P.Results.ths;
+            numstd = P.Results.numstd;
             figure;
-            thresh_specified = nargin > 1 && ~isempty(ths);
+            thresh_specified = ~isempty(ths);
             if thresh_specified
                 control_groups = ...
                     intogroups(obj.segment_tbl(control_idx,:),ths);
@@ -592,7 +561,7 @@ classdef EB_analysis
                 xlabel('EB intensity [A.U.]');
                 ylabel('# Vessels [%]');
                 legend('control','MB + FUS');
-                if isnumeric(numstd)
+                if isnumeric(numstd) && ~isempty(numstd)
                    xline(mean(cur_controls)+numstd*std(cur_controls),...
                        'LineWidth',2,'LineStyle','--');
                    legend('control','MB + FUS',...
@@ -619,6 +588,8 @@ classdef EB_analysis
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
             p = anova1(obj.segment_tbl.median_segment_diam_um,control_idx)
+            xticklabels({'control','MB + FUS'});
+            ylabel('Diameter [um]');
         end
         function perc_tbl = openedHist(obj,varargin)
             % plot the histogram of fraction of opened vesseles by diameter
