@@ -8,7 +8,8 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 
 ## Initialization
 1. Open the extracted folder in matlab and run the main app by executing:
-	>EBreaverApp.<br>
+	>EBreaverApp
+
 in the MATLAB command terminal
 The following window will pop-up:
 ![App GUI](resources/guiUI.png)
