@@ -6,8 +6,9 @@ Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification 
 * Tested on MATLAB 2021a, requires image processing toolbox.
 
 ## Initialization
-1. Open the extracted folder and open "My_reaver.prj".
-   This should be done everytime you work on your data as it imports all the dependencies.
+1. Open the extracted folder and open the app EB_reaver (double click)
+	-The following window will pop-up:
+![screenshot](resources/guiUI.png)
 
 ## Vessel segmentation
 1. type *"REAVER_GUI"* on the MATLAB terminal and press "enter"
