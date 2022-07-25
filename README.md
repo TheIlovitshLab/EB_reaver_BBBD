@@ -86,7 +86,7 @@ Plots the histogram of diameters of all segmented vessels. Also adds a compariso
 plots the fraction of opened vessels in different diameters of vessels (in specified diameter groups)
 Also returns a table of opening percentage per frame and diameter for statistical analysis in GraphPad
 
-<img src="resources/resources/openedHist.png" width="420" height="315">
+<img src="resources/openedHist.png" width="420" height="315">
 
 **regionHistogram**
 plots the number of vessels in each treated brain by brain region (beta version)
