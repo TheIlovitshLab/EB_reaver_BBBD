@@ -10,11 +10,11 @@ function file_path = ...
 %     from_px = distance from vessel wall to start the eb extraction from
 %       [pixels]
 % Output arguements:
-%     results_tbl = table on n rows corresponding to n files in path. for
-%         each file it contains all vessel segments median diameter and
-%         extravasation (median red intensity in perivascular area). this
-%         table alongside the n_px value is written to a mat file in the path
-%         folder
+%     file_path - path to a .mat file that will contain a table of n rows
+%         corresponding to n files in path. for each file it contains all
+%         vessel segments median diameter and extravasation (median red 
+%         intensity in perivascular area). The file also contains the
+%         processing hyperparameters from_px and n_px
 
     %% Predefined params
     if nargin < 4
@@ -55,7 +55,7 @@ function file_path = ...
         max_segment_diam_um,segment_len_um,...
         median_red);
     %% Iterate over files
-    for i = 1:n_files
+    parfor i = 1:n_files
         fprintf('Processing file %d of %d\n',i,numel(verified_files));
         % Calc extravasation for every segment.
         metric_st = ...
