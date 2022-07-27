@@ -26,10 +26,10 @@ if true
 	%---- End: Determine Greyscale Total Neighbor Values
 % keyboard
 	%---- Start: Local Thresholding of Greyscale Neighbors to get First Binary Image
-		handles.derivedPic.mean = 0.4*imfilter( handles.derivedPic.greynbrs , ...
-			fspecial('average', [handles.constants.averagingFilterSize handles.constants.averagingFilterSize]) , 'symmetric' ) ;
-		
-		handles.derivedPic.BW_1 = ( handles.derivedPic.greynbrs - handles.derivedPic.mean ) > handles.constants.grey2BWthreshold ;
+		handles.derivedPic.mean = handles.constants.bgSubFactor*imfilter( handles.derivedPic.greynbrs , ...
+			fspecial('average', [handles.constants.averagingFilterSize,handles.constants.averagingFilterSize] ) , 'symmetric' ) ;
+		handles.derivedPic.BW_1 = ...
+            ( handles.derivedPic.greynbrs - handles.derivedPic.mean )> handles.constants.grey2BWthreshold ;
 	%---- End: Local Thresholding of Greyscale Neighbors to get First Binary Image
 
 	%---- Start: Determine Total Neighbor Values of First Binary Image
@@ -57,7 +57,6 @@ if true
 		bw_2inv = bw_2inv( (50+1):(end-50) , (50+1):(end-50) ) ;
 		handles.derivedPic.BW_2 = ~bw_2inv ;
 
-		bw_2inv = ~handles.derivedPic.BW_2 ;
 		bw_2inv = padarray( bw_2inv , [50,50] , 'replicate' ) ;
 		bw_2inv = bw_2inv & bwareafilt( bw_2inv , [ 0 , 800 ] ) ;
 		bw_2inv = bw_2inv( (50+1):(end-50) , (50+1):(end-50) ) ;

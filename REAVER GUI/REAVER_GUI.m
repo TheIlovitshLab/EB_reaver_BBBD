@@ -626,6 +626,7 @@ if true
 		handles.constants.averagingFilterSize  = 128 ; % Size of averaging neighborhood
 		handles.constants.grey2BWthreshold     = 0.045 ; % Threshold used for converting grey neighbors to BW
 		handles.constants.minCCArea			   = 1600 ; % Minimum Connected Component Area to Keep
+        handles.constants.bgSubFactor          = 0.4;
 	%---- End: Image Segmentation First Stage Constants
 
 	%---- Start: Image Segmentation Second Stage Constants
@@ -825,7 +826,8 @@ function processAllImages_Callback(hObject,~)
 			% Read the image in channel by channel
 			for j = 1:length(info)
 				setDirectory(t_file,j)
-				handles.basePic.data = cat(3, handles.basePic.data, im2uint8(read(t_file))) ;
+				handles.basePic.data = ...
+                    cat(3, handles.basePic.data, uint8(rescale(read(t_file),0,255))) ;
 			end
 			warning('on','MATLAB:imagesci:tiffmexutils:libtiffWarning')
 			% If the image only has 2 channels, create a 3rd 0 channel
@@ -1518,7 +1520,7 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 				%**** End: Determine Greyscale Total Neighbor Values
 
 				%**** Start: Local Thresholding of Greyscale Neighbors to get First Binary Image
-					handles.derivedPic.mean = 0.4*imfilter( handles.derivedPic.greynbrs , ...
+					handles.derivedPic.mean = handles.constants.bgSubFactor*imfilter( handles.derivedPic.greynbrs , ...
 						fspecial('average', [handles.constants.averagingFilterSize handles.constants.averagingFilterSize]) , 'symmetric' ) ;
 
 					handles.derivedPic.BW_1 = ( handles.derivedPic.greynbrs - handles.derivedPic.mean ) > handles.constants.grey2BWthreshold ;
@@ -2239,7 +2241,8 @@ function settingsButton_Callback(hObject,~)
 		prompt = {'Averaging Filter Size :',...
 				  'Minimum Connected Component Area :'...
 				  'Wire Dilation Threshold :'...
-				  'Vessel Thickness Threshold:'};
+				  'Vessel Thickness Threshold:',...
+                  'background subtraction factor:'};
 
 		name = 'Settings' ;
 		numlines = [1 40] ;
@@ -2249,7 +2252,8 @@ function settingsButton_Callback(hObject,~)
 		defaultResponse = [{handles.constants.averagingFilterSize};...
 						   {handles.constants.minCCArea};...
 						   {handles.constants.wireDilationThreshold};...
-						   {handles.constants.vesselThicknessThreshold}] ;
+						   {handles.constants.vesselThicknessThreshold};...
+                           {handles.constants.bgSubFactor}] ;
 		
 		defaultResponse = cellfun( @num2str , defaultResponse , 'UniformOutput' , false ) ;
 	%---- End: Create Default Response
@@ -2277,7 +2281,8 @@ function settingsButton_Callback(hObject,~)
 	fields = [{'averagingFilterSize'};...
 			  {'minCCArea'};...
 			  {'wireDilationThreshold'};...
-			  {'vesselThicknessThreshold'}] ;
+			  {'vesselThicknessThreshold'};...
+              {'bgSubFactor'}] ;
 
 	for i = 1:length(fields)
 		handles.constants.(fields{i}) = answer{i} ;

@@ -41,7 +41,7 @@ The following window will pop-up:
 ## Summary Analysis
 The EB_analysis class object has the following plotting methods:
 
-###scatterPlot###
+### scatterPlot
 Creates a scatter plot where each point represents a vessel segment and the axis are:
 x = vessel diameter, y = Median red intensity in perivascular area 
 The control and test measurements are marked with different colors
