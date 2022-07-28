@@ -63,7 +63,12 @@ if true
 		handles.derivedPic.BW_2 = handles.derivedPic.BW_2 | bw_2inv ;
 
 	%---- End: Fill Holes and Even Out Edges
-	
+    
+	%---- Start: Close gaps
+        closing_kernel = strel('disk',10,0);
+        handles.derivedPic.BW_2 = imclose(handles.derivedPic.BW_2,closing_kernel);
+    %---- End: Close gaps
+    
 	%---- Start: Thin the Binary Image
 		bw_2 = padarray( handles.derivedPic.BW_2 , [50,50] , 'replicate' ) ;
 		bw_2 = bwmorph( bw_2 , 'thin' , 2 ) ;
