@@ -28,8 +28,8 @@ if true
 	%---- Start: Local Thresholding of Greyscale Neighbors to get First Binary Image
 		handles.derivedPic.mean = handles.constants.bgSubFactor*imfilter( handles.derivedPic.greynbrs , ...
 			fspecial('average', [handles.constants.averagingFilterSize,handles.constants.averagingFilterSize] ) , 'symmetric' ) ;
-		handles.derivedPic.BW_1 = ...
-            ( handles.derivedPic.greynbrs - handles.derivedPic.mean )> handles.constants.grey2BWthreshold ;
+		handles.derivedPic.bkgSubImage = ( handles.derivedPic.greynbrs - handles.derivedPic.mean );
+        handles.derivedPic.BW_1 = handles.derivedPic.bkgSubImage > handles.constants.grey2BWthreshold ;
 	%---- End: Local Thresholding of Greyscale Neighbors to get First Binary Image
 
 	%---- Start: Determine Total Neighbor Values of First Binary Image

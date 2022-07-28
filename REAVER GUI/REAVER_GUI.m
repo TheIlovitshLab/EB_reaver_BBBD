@@ -172,7 +172,7 @@ end
 
 				uicontrol('Parent',displayedImageButtonGroup...
 						 ,'Style','radiobutton'...
-						 ,'String','Grey Neighbors'...
+						 ,'String','Background subtraction'...
 						 ,'FontWeight','Bold'...
 						 ,'Units','Normalized'...
 						 ,'Position',[6/256 77/154 1 20/154]...
@@ -1522,8 +1522,8 @@ function imageDirectoryTableSelection_Callback(hObject,eventdata)
 				%**** Start: Local Thresholding of Greyscale Neighbors to get First Binary Image
 					handles.derivedPic.mean = handles.constants.bgSubFactor*imfilter( handles.derivedPic.greynbrs , ...
 						fspecial('average', [handles.constants.averagingFilterSize handles.constants.averagingFilterSize]) , 'symmetric' ) ;
-
-					handles.derivedPic.BW_1 = ( handles.derivedPic.greynbrs - handles.derivedPic.mean ) > handles.constants.grey2BWthreshold ;
+                    handles.derivedPic.bkgSubImage = ( handles.derivedPic.greynbrs - handles.derivedPic.mean );
+					handles.derivedPic.BW_1 = handles.derivedPic.bkgSubImage > handles.constants.grey2BWthreshold ;
 				%**** End: Local Thresholding of Greyscale Neighbors to get First Binary Image
 
 				%**** Start: Determine Total Neighbor Values of First Binary Image
@@ -1830,7 +1830,7 @@ function displayedImageButtonGroupSelectionChanged(hObject,eventdata)
 			case 'Grey'
 				handles.lastImage = 6 ;
 				
-			case 'Grey Neighbors'
+			case 'Background subtraction'
 				handles.lastImage = 5 ;
 				
 			case 'First Binary'
@@ -1859,8 +1859,8 @@ function displayedImageButtonGroupSelectionChanged(hObject,eventdata)
 			case 'Grey'
 				handles.image.CData = handles.derivedPic.grey ;
 				
-			case 'Grey Neighbors'
-				handles.image.CData = handles.derivedPic.greynbrs ;
+			case 'Background subtraction'
+				handles.image.CData = handles.derivedPic.bkgSubImage ;
 				
 			case 'First Binary'
 				handles.image.CData = handles.derivedPic.BW_1 ;
@@ -2821,7 +2821,7 @@ function figKeyPress(hObject,~)
 								handles.image.CData = handles.derivedPic.grey ;
 
 							case 5
-								handles.image.CData = handles.derivedPic.greynbrs ;
+								handles.image.CData = handles.derivedPic.bkgSubImage ;
 
 							case 4
 								handles.image.CData = handles.derivedPic.BW_1 ;
