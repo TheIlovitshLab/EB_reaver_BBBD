@@ -31,9 +31,9 @@ for example, if the smallest vessel radius is 6 pixels choose (pi*6^2) or approx
 * This will create an initial segmentation, which can be improved iteratively (a new segmentation should be done for each iteration):
 1. Look at the grey image and the background subtraction image (left radio-button menu)
 - The background subtraction image should be better then the gray image by:
-** having an enhanced SNR
-** having sharper vessel edges
-** having more uniform vessel intenity across different regions of the frame
+  - having an enhanced SNR
+  - having sharper vessel edges
+  - having more uniform vessel intenity across different regions of the frame
 ways to improve the background subtraction image:
 - If the SNR is lower than in the grey image: increase the averaging filter size / decrease subtraction factor
 - If only the vessel edges are seen/ or only some vessels are seen: increase the averaging filter size / decrease subtraction factor
