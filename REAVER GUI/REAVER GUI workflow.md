@@ -14,6 +14,7 @@ which multiplies the background image before its subtracted from the 8-pixel-ave
 * Added an extra morphological "closing" after vessel filling (before the compensatory dilation the BW image)
 * The curosor size adapts to zooming
 
+<img src="../resources/REAVER GUI start screen.png">
 ## Recommended workflow
 1. Load the tiff files (File > Load directory)
 2. Open a representative image (by pressing the image name in the files menu on the left)
@@ -34,6 +35,8 @@ for example, if the smallest vessel radius is 6 pixels choose (pi*6^2) or approx
   - having an enhanced SNR
   - having sharper vessel edges
   - having more uniform vessel intenity across different regions of the frame
+
+<img src="../resources/REAVER GUI bkg sub screen.png">
 ways to improve the background subtraction image:
 - **If the SNR is lower than in the grey image:** increase the averaging filter size / decrease subtraction factor
 - **If only the vessel edges are seen/ or only some vessels are seen:** increase the averaging filter size / decrease subtraction factor
@@ -41,9 +44,13 @@ ways to improve the background subtraction image:
 Once you are happy with the background subtraction image (all vessels are clearly brighter than the background):
 2. Look at the First binary image
 - The vessels should all be segmented in white, some small amount of scattered noise should also be segmented in white
+
+<img src="../resources/REAVER GUI 1st bin screen.png">
 ways to improve the First binary image:
 - **If there is a lot of scattered noise in the segmentation:** increase the grey threshold
 - **If some of the vessels are not segmeted:** decrease the grey threshold
 
 Now that you are happy with the first binary segmentation, the 2nd binary image should look good as well.
-From here on its al about manual segmentation fixes:
+
+<img src="../resources/REAVER GUI seg screen.png">
+From here on its all about manual segmentation fixes:
