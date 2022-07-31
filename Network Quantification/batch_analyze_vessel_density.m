@@ -29,15 +29,24 @@ function results_tbl = batch_analyze_vessel_density(path)
     n_files = numel(verified_files);
     image_name = {verified_files.name}';
     vessel_density = cell(n_files,1);
+    length_density = cell(n_files,1);
+    bifurcation_density = cell(n_files,1);
     results_tbl = ...
-        table(image_name,vessel_density);
+        table(image_name,vessel_density, length_density,bifurcation_density);
     %% Iterate over files
     for i = 1:n_files
         fprintf('Processing file %d of %d\n',i,numel(verified_files));
         % Calc extravasation for every segment.
         metric_st.vessel_density = cell(1,1);
-        metric_st.vessel_density{:} = v_density(fullfile(path,verified_files(i).name));
+        metric_st.vessel_density{:} = ...
+            v_density(fullfile(path,verified_files(i).name));
+        metric_st.length_density = cell(1,1);
+        metric_st.length_density{:} = ...
+            l_density(fullfile(path,verified_files(i).name));
+        metric_st.bifurcation_density = cell(1,1);
+        metric_st.bifurcation_density{:} = ...
+            b_density(fullfile(path,verified_files(i).name));
         metric_st.image_name = image_name(i);
-        results_tbl(i,:) = struct2table(orderfields(metric_st,[2,1]));
+        results_tbl(i,:) = struct2table(orderfields(metric_st,[4,1,2,3]));
     end
 end

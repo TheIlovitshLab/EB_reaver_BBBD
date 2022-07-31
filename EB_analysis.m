@@ -498,6 +498,7 @@ classdef EB_analysis
             %       groups.
             %   numstd (optional) - plot the threshold between control and
             %       test as mean + numstd*sigma
+            % Name-Value pair arguements:
             %   'Mode' (optional) - display mode, can either be 'histogram'
             %       (default) or 'pdf' which displys the kernel density
             control_idx = cellfun(@(x) strcmp(x,'control'),...
@@ -599,6 +600,7 @@ classdef EB_analysis
             %   Intrabrain - logical flag:
             %       0 = plot all brains together,
             %       1 = plot each brain seperatly
+            % Name-Value pair arguements:
             %   Errorbars - 'on' or 'off' (default), only shows errorbars
             %       if intrabrain is set to 1
             % Output:
