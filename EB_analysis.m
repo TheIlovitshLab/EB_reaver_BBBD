@@ -1,6 +1,5 @@
 classdef EB_analysis
-    % EB analaysis results of control and treatment brain with same
-    % perivascular area and same extraction method
+    % EB analaysis results of control and treatment brain sections
     properties
         segment_tbl
         n_px
