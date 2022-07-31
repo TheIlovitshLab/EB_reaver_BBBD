@@ -17,7 +17,7 @@ The following window will pop-up:
 
 ## Vessel segmentation
 1. Open the REAVER GUI via the dedicated push button
-2. Follow the *[REAVER segmentation workflow](https://github.com/TheIlovitshLab/EB_reaver/edit/master/REAVER%20GUI/REAVER%20GUI%20workflow.md)*
+2. Follow the *[REAVER segmentation workflow](https://github.com/TheIlovitshLab/EB_reaver/blob/master/REAVER%20GUI/REAVER%20GUI%20workflow.md)*
 - Use the FITC-dextran (green) channl for segmentation
 - This will create a ".mat" file for each segmented tiff file
 - It will also create a "UserVerified.mat" file that points to verified files for future analysis
