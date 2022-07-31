@@ -4,7 +4,7 @@
 * Man-made segmentation is always the best segmentation- 
 if you can't see the vessel the computer can't either
 
-Introduction to the original system: *[REAVER](https://github.com/uva-peirce-cottler-lab/public_REAVER)*
+Introduction to the original SW: *[REAVER](https://github.com/uva-peirce-cottler-lab/public_REAVER)*
 
 ## What are the changes from the original SW?
 * Works on any type of tiff images (8, 10 or 16 bit)
