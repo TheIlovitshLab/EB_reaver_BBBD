@@ -35,15 +35,15 @@ for example, if the smallest vessel radius is 6 pixels choose (pi*6^2) or approx
   - having sharper vessel edges
   - having more uniform vessel intenity across different regions of the frame
 ways to improve the background subtraction image:
-- If the SNR is lower than in the grey image: increase the averaging filter size / decrease subtraction factor
-- If only the vessel edges are seen/ or only some vessels are seen: increase the averaging filter size / decrease subtraction factor
+- **If the SNR is lower than in the grey image:** increase the averaging filter size / decrease subtraction factor
+- **If only the vessel edges are seen/ or only some vessels are seen:** increase the averaging filter size / decrease subtraction factor
 
 Once you are happy with the background subtraction image (all vessels are clearly brighter than the background):
 2. Look at the First binary image
 - The vessels should all be segmented in white, some small amount of scattered noise should also be segmented in white
 ways to improve the First binary image:
-- If there is a lot of scattered noise in the segmentation - increase the grey threshold
-- If some of the vessels are not segmeted - decrease the grey threshold
+- **If there is a lot of scattered noise in the segmentation:** increase the grey threshold
+- **If some of the vessels are not segmeted:** decrease the grey threshold
 
 Now that you are happy with the first binary segmentation, the 2nd binary image should look good as well.
 From here on its al about manual segmentation fixes:
