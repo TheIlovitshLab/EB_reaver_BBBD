@@ -94,9 +94,10 @@ classdef EB_analysis
             writetable(control_tbl, control_csv_filename);
             writetable(test_tbl, test_csv_filename);
         end
-        function keep_diameters(obj,lowLim,highLim)
+        function new_obj = keep_diameters(obj,lowLim,highLim)
            % Remove all vessel segments outside the given diameter range
-           obj.segment_tbl(...
+           new_obj = obj;
+           new_obj.segment_tbl(...
                (obj.segment_tbl.median_segment_diam_um < lowLim) |...
                (obj.segment_tbl.median_segment_diam_um > highLim),:) = [];
         end

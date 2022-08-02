@@ -28,6 +28,9 @@ new_tbl = table(unique_regions,...
 boxplot2(new_tbl.bifurcation_density_per_region)
 xticks(1:numel(unique_regions));
 xticklabels(unique_regions);
+%%
+b_tbl = new_tbl;
+
 %% Helper function
 function region = region_from_name(name)
 % Helper function to retrieve the brain region (3rd arguement) from an

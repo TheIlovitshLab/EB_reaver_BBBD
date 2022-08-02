@@ -1,11 +1,6 @@
 function handles = grey2binarySliderUpdater(handles,currentSliderValue)
 
-	if currentSliderValue<=0.2
-		adjustedSliderValue  = currentSliderValue ;
-	else
-		adjustedSliderValue = 4*currentSliderValue - 0.6 ;
-	end
-
+    adjustedSliderValue  = currentSliderValue ;
 
 	handles.constants.grey2BWthreshold = round(1e3*adjustedSliderValue)/1e3 ;
 

@@ -14,7 +14,7 @@ end
 [P_n,edges] = histcounts(valance);
 N = (edges(1:end-1)+edges(2:end))/2;
 N_mv = sum(((N-2)./2).*P_n);
-image_volume = st.imageSize(1)*st.imageSize(2)*20;
-vessel_density = (N_mv/image_volume)/(st.image_resolution^2);
-vessel_density = vessel_density*10^9; % To go from um^-3 to mm^-3
+image_area = st.imageSize(1)*st.imageSize(2)*(st.image_resolution^2);
+vessel_density = N_mv/image_area;
+vessel_density = vessel_density*10^6; % To go from um^-2 to mm^-2
 end
