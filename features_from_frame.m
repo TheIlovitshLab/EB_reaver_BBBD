@@ -71,10 +71,9 @@ metric_st.median_red = median_red;
 
 % Remove nans
 nans = isnan(median_red{1});
-small_short = (all_segment_len_um{1,1} < 10) & (median_segment_diam_um{1,1} < 4);
-metric_st.median_red{1}(nans | small_short) = [];
-metric_st.median_segment_diam_um{1}(nans | small_short) = [];
-metric_st.max_segment_diam_um{1}(nans | small_short) = [];
-metric_st.segment_len_um{1}(nans | small_short) = [];
+metric_st.median_red{1}(nans) = [];
+metric_st.median_segment_diam_um{1}(nans) = [];
+metric_st.max_segment_diam_um{1}(nans) = [];
+metric_st.segment_len_um{1}(nans) = [];
 end
 
