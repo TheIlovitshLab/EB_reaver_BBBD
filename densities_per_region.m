@@ -32,6 +32,12 @@ xticklabels(unique_regions);
 v_tbl = new_tbl(:,[1,2]);
 l_tbl = new_tbl(:,[1,3]);
 b_tbl = new_tbl(:,[1,4]);
+%% Saving
+% folder = uigetdir();
+group = 'test';  % Change accordingly
+writetable(v_tbl,fullfile(folder,[group,'_v.csv']));
+writetable(l_tbl,fullfile(folder,[group,'_l.csv']));
+writetable(b_tbl,fullfile(folder,[group,'_b.csv']));
 %% Helper function
 function region = region_from_name(name)
 % Helper function to retrieve the brain region (3rd arguement) from an

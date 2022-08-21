@@ -526,14 +526,13 @@ classdef EB_analysis
                     obj.segment_tbl.median_red(control_idx);
                 test_groups = ...
                     obj.segment_tbl.median_red(~control_idx);
-                len = 2;
+                len = 1;
             end
-            for i = 1:len-1
+            for i = 1:len
                 if thresh_specified
                     subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
                     cur_controls = control_groups{i};
                     cur_tests = test_groups{i};
-                    title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
                 else
                     cur_controls = control_groups;
                     cur_tests = test_groups;
@@ -558,17 +557,38 @@ classdef EB_analysis
                         100*test_density./sum(test_density),...
                         'FaceColor','#09425A');
                     a2.FaceAlpha = 0.5;
+                    [max_control,max_control_idx] =...
+                        max(100*control_density./sum(control_density));
+                    [max_test,max_test_idx] =...
+                        max(100*test_density./sum(test_density));
+                    plot([control_vals(max_control_idx),test_vals(max_test_idx)],...
+                        (0.1 + max([max_control,max_test]))*ones(1,2),...
+                        'Color',[0 0 0],'LineWidth',1);
+                    all_measurements = vertcat(cur_controls,cur_tests);
+                    all_label = ones(size(all_measurements));
+                    all_label(1:length(cur_controls)) = 0;
+                    p = anovan(all_measurements,all_label,'display','off');
+                    text(...
+                        mean([control_vals(max_control_idx),test_vals(max_test_idx)]),...
+                        0.15 + max([max_control,max_test]),...
+                        sigstars(p),...
+                       'FontSize',12,...
+                       'HorizontalAlignment','center');
                 end
                 xlabel('EB intensity [A.U.]');
                 ylabel('# Vessels [%]');
-                legend('control','MB + FUS');
+                legend([a1,a2],{'control','MB + FUS'});
                 if isnumeric(numstd) && ~isempty(numstd)
-                   xline(mean(cur_controls)+numstd*std(cur_controls),...
+                   l1 = xline(mean(cur_controls)+numstd*std(cur_controls),...
                        'LineWidth',2,'LineStyle','--');
-                   legend('control','MB + FUS',...
-                       ['Control mean + ',num2str(numstd),' SDs']);
+                   legend([a1,a2,l1],{'control','MB + FUS',...
+                       ['Control mean + ',num2str(numstd),' SDs']});
                 end
                 xlim([0,1]);
+                ylim([0,5]);
+                if thresh_specified
+                    title(sprintf('%d-%d um diameter',ths(i),ths(i+1)));
+                end
                 hold off; 
             end
         end
@@ -581,14 +601,14 @@ classdef EB_analysis
             histogram(control_diams,0.5:1:25.5,...
                 'Normalization','probability','FaceColor','#007C92'); 
             hold on;
-            histogram(test_diams,0.5:1:25.5,'Normalization','probability',...\
+            histogram(test_diams,0.5:1:25.5,'Normalization','probability',...
                 'FaceColor','#E98300');
             legend(['Control-',num2str(numel(control_diams)),' total segments']...
                 ,['Treatment-',num2str(numel(test_diams)),' total segments']);
             xlabel('Vessel diameter [um]'); ylabel('% of total vessels');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
-            p = anova1(obj.segment_tbl.median_segment_diam_um,control_idx)
+            p = anova1(obj.segment_tbl.median_segment_diam_um,~control_idx)
             xticklabels({'control','MB + FUS'});
             ylabel('Diameter [um]');
         end
