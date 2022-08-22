@@ -43,12 +43,12 @@ classdef EBreaverApp < matlab.apps.AppBase
             normalize_red = app.NormalizeredCheckBox.Value;
             if ~isempty(control_dir)
                 disp('Starting to work on control files')
-                EB_analysis_entire_folder(n_px,control_dir,normalize_red,diffu);
+                analyze_entire_folder(n_px,control_dir,normalize_red,diffu);
                 disp('Finished processing control files')
             end
             if ~isempty(test_dir)
                 disp('Starting to work on test files')
-                EB_analysis_entire_folder(n_px,test_dir,normalize_red,diffu); 
+                analyze_entire_folder(n_px,test_dir,normalize_red,diffu); 
                 disp('Finished processing test files')
             end
         end

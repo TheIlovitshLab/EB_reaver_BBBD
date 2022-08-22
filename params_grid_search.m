@@ -11,13 +11,13 @@ for i = initial_distances
     for w = widths
         %Analyzing folder
 %         non_norm_control_file_path =...
-%             EB_analysis_entire_folder(w,control_dir,0,i);
+%             EB_analysis_entiere_folder(w,control_dir,0,i);
 %         non_norm_test_file_path =...
-%             EB_analysis_entire_folder(w,test_dir,0,i);
+%             analyze_entire_folder(w,test_dir,0,i);
         norm_control_file_path =...
-            EB_analysis_entire_folder(w,control_dir,1,i);
+            analyze_entire_folder(w,control_dir,1,i);
         norm_test_file_path =...
-            EB_analysis_entire_folder(w,test_dir,1,i);
+            analyze_entire_folder(w,test_dir,1,i);0
         %If analysis already exists, just load files
 %         if i == 0
 %             non_norm_control_file_path = fullfile(control_dir,...

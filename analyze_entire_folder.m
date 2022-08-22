@@ -1,5 +1,5 @@
 function file_path = ...
-    EB_analysis_entire_folder(n_px, path, normalizeRed, from_px)
+    analyze_entire_folder(n_px, path, normalizeRed, from_px)
 % Function to iterate over a directory of images pre-processed by REAVER, with 
 % Existing ".mat" analysis files, and compute EB leakage
 % Input arguements:
