@@ -33,7 +33,7 @@ v_tbl = new_tbl(:,[1,2]);
 l_tbl = new_tbl(:,[1,3]);
 b_tbl = new_tbl(:,[1,4]);
 %% Saving
-% folder = uigetdir();
+folder = uigetdir();
 group = 'test';  % Change accordingly
 writetable(v_tbl,fullfile(folder,[group,'_v.csv']));
 writetable(l_tbl,fullfile(folder,[group,'_l.csv']));

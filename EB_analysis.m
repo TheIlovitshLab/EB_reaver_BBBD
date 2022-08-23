@@ -615,10 +615,10 @@ classdef EB_analysis
         function perc_tbl = openedHist(obj,varargin)
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
-            %   ths - array of diameters to be used as diameter ..
-            %       groups.
+            %   ths - array of diameters to be used as diameter groups.
+            %       default = [2:10]
             %   Intrabrain - logical flag:
-            %       0 = plot all brains together,
+            %       0 = plot all brains together (default)
             %       1 = plot each brain seperatly
             % Name-Value pair arguements:
             %   Errorbars - 'on' or 'off' (default), only shows errorbars
@@ -628,8 +628,8 @@ classdef EB_analysis
             
             P = inputParser();
             P.addOptional('ths',[2:10],@(x) isnumeric(x));
-            P.addParameter('Intrabrain',0,@(x) sum(ismember(x,[0,1])) == 1);
-            P.addParameter('Errorbars','off',...
+            P.addOptional('Intrabrain',0,@(x) sum(ismember(x,[0,1])) == 1);
+            P.addOptional('Errorbars','off',...
                 @(x) sum(strcmp(x,{'on','off'})) == 1);
             P.parse(varargin{:})
             
