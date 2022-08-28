@@ -1,11 +1,14 @@
 # REAVER for BBB opening
 Rapid Editable Analysis of Vessel Elements Routine, utilized for quantification of perivascular EB extravasation during BBB opening.
 
-
 ## Dependencies:
 * Tested on MATLAB 2021a, requires image processing toolbox.
 * Before starting the process make sure the control and test tiff files are placed in seperate folders
 
+## Example files
+Try the pipeline on the *[Example files](https://github.com/TheIlovitshLab/EB_reaver/blob/master/Examples)*
+ 
+# EB reaver Pipeline
 ## Initialization
 1. Open the extracted folder in matlab and run the main app by executing:
 	>EBreaverApp
