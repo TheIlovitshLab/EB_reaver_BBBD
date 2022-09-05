@@ -7,18 +7,26 @@ classdef EB_analysis
         UM_PX    
     end
     methods
-        function obj = EB_analysis(control_file,test_file,um_px)
+        function obj = EB_analysis(varargin)
             % Construction of new EB_analysis object.
             % Input arguements:
-            %   control = control EB_analysis_entire folder file
-            %   Test = test EB_analysis_entire folder file
-            %   um_px = ratio of microns to pixel
-            if nargin < 1
+            %   control_file = control "EB_analysis_entire_folder" file
+            %   test_file = test "EB_analysis_entire_folder" file
+            %   um_px = ratio of microns to pixel (default = 0.29288)
+            P = inputParser();
+            P.addOptional('control_file',[],@(x) isfile(x));
+            P.addOptional('test_file',[],@(x) isfile(x));
+            P.addOptional('um_px',0.29288,@(x) isnumeric(x));
+            P.parse(varargin{:});
+            control_file = P.Results.control_file;
+            test_file = P.Results.test_file;
+            obj.UM_PX = P.Results.um_px;
+            if isempty(control_file)
                 [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
                 control_file = fullfile(folder1,file1);
             end
             control = load(control_file);
-            if nargin < 2
+            if isempty(test_file)
                 [file2,folder2] = uigetfile('*.mat','Choose treatment analysis file');
                 test_file = fullfile(folder2,file2);
             end
@@ -54,17 +62,22 @@ classdef EB_analysis
             new_obj_exc = obj;
             new_obj_exc.segment_tbl(area_idx,:) = [];
         end
-        function writecsv(obj,ths,GroupByFrame,control_csv_filename,test_csv_filename)
+        function writecsv(obj,ths,control_csv_filename,test_csv_filename,varargin)
             % save control and test data to csv in a graphpad format
-            % Ths = diameter grouop edges
-            % GroupByFrame = boolean flag            
-            if nargin < 2
+            % Inputs:
+            %   ths = diameter grouop edges
+            %   control_csv_filename = path to csv file for control group
+            %   test_csv_filename = path to csv file for test group
+            % Name-Value pair arguements:
+            %   GroupByFrame = boolean flag (default = 0) 
+            P = inputParser();
+            P.addOptional('GroupByFrame',0,@(x) ismember(x,[0,1]));
+            P.parse(varargin{:});
+            GroupByFrame = P.Results.GroupByFrame;
+            if nargin < 1
                 ths = 2:10;
             end
             if nargin < 3
-                GroupByFrame = 0;
-            end
-            if nargin < 4
                 [control_csv_filename, control_csv_folder] = ...
                     uiputfile({'*.csv';'*.xlsx'},'Specify control csv file name');
                 control_csv_filename = ...
@@ -302,14 +315,18 @@ classdef EB_analysis
                 test_groups = cellfun(@(x) rmoutliers(x),...
                     test_groups,'UniformOutput',false);
                 for i = 1:numel(control_groups)
-                    Violin(control_groups(i),i,...
-                        'HalfViolin','left','ViolinColor',{[1,0,0]});
-                    hold on;
+                    if ~isempty(control_groups{i})
+                        Violin(control_groups(i),i,...
+                            'HalfViolin','left','ViolinColor',{[1,0,0]});
+                        hold on;
+                    end
                 end
                 for i = 1:numel(test_groups)
-                    Violin(test_groups(i),i,...
-                        'HalfViolin','right','ViolinColor',{[0,0,1]});
-                    hold on;
+                    if ~isempty(test_groups{i})
+                        Violin(test_groups(i),i,...
+                            'HalfViolin','right','ViolinColor',{[0,0,1]});
+                        hold on;
+                    end
                 end
                 xticks([1:numel(control_groups)]);
                 xticklabels(generate_xticks(ths));
@@ -501,19 +518,21 @@ classdef EB_analysis
             % Name-Value pair arguements:
             %   'Mode' (optional) - display mode, can either be 'histogram'
             %       (default) or 'pdf' which displys the kernel density
-            control_idx = cellfun(@(x) strcmp(x,'control'),...
-                obj.segment_tbl.label);
             P = inputParser();
-            P.addOptional('ths',[],@(x) isnumeric(x));
-            P.addOptional('numstd',[],@(x) isa(x,'double'));
             P.addParameter('Mode','histogram',...
                 @(x) sum(strcmp(x,{'histogram','pdf'}))==1);
-            P.parse(ths,numstd,varargin{:});
+            P.parse(varargin{:});
             showmode = strcmp(P.Results.Mode,'histogram');
-            ths = P.Results.ths;
-            numstd = P.Results.numstd;
+            if nargin < 1
+                ths = 2:10;
+            end
+            if nargin < 2
+                numstd = 2;
+            end
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
             figure;
-            thresh_specified = ~isempty(ths);
+            thresh_specified = (nargin>1);
             if thresh_specified
                 control_groups = ...
                     intogroups(obj.segment_tbl(control_idx,:),ths);
@@ -537,52 +556,54 @@ classdef EB_analysis
                     cur_controls = control_groups;
                     cur_tests = test_groups;
                 end
-                if showmode
-                    histogram(cur_controls,100,'FaceColor','#8c1515',...
-                        'Normalization','probability');
-                    hold on;
-                    histogram(cur_tests,100,'FaceColor','#09425A',...
-                        'Normalization','probability');
-                else
-                    [control_density, control_vals] =...
-                        ksdensity(cur_controls);
-                    [test_density, test_vals] =...
-                        ksdensity(cur_tests);
-                    a1 = area(control_vals,...
-                        100*control_density./sum(control_density),...
-                        'FaceColor','#8c1515');
-                    a1.FaceAlpha = 0.5;
-                    hold on;
-                    a2 = area(test_vals,...
-                        100*test_density./sum(test_density),...
-                        'FaceColor','#09425A');
-                    a2.FaceAlpha = 0.5;
-                    [max_control,max_control_idx] =...
-                        max(100*control_density./sum(control_density));
-                    [max_test,max_test_idx] =...
-                        max(100*test_density./sum(test_density));
-                    plot([control_vals(max_control_idx),test_vals(max_test_idx)],...
-                        (0.1 + max([max_control,max_test]))*ones(1,2),...
-                        'Color',[0 0 0],'LineWidth',1);
-                    all_measurements = vertcat(cur_controls,cur_tests);
-                    all_label = ones(size(all_measurements));
-                    all_label(1:length(cur_controls)) = 0;
-                    p = anovan(all_measurements,all_label,'display','off');
-                    text(...
-                        mean([control_vals(max_control_idx),test_vals(max_test_idx)]),...
-                        0.15 + max([max_control,max_test]),...
-                        sigstars(p),...
-                       'FontSize',12,...
-                       'HorizontalAlignment','center');
-                end
-                xlabel('EB intensity [A.U.]');
-                ylabel('# Vessels [%]');
-                legend([a1,a2],{'control','MB + FUS'});
-                if isnumeric(numstd) && ~isempty(numstd)
-                   l1 = xline(mean(cur_controls)+numstd*std(cur_controls),...
-                       'LineWidth',2,'LineStyle','--');
-                   legend([a1,a2,l1],{'control','MB + FUS',...
-                       ['Control mean + ',num2str(numstd),' SDs']});
+                if ~isempty(cur_controls)
+                    if showmode
+                        a1 = histogram(cur_controls,100,'FaceColor','#8c1515',...
+                            'Normalization','probability');
+                        hold on;
+                        a2 = histogram(cur_tests,100,'FaceColor','#09425A',...
+                            'Normalization','probability');
+                    else
+                        [control_density, control_vals] =...
+                            ksdensity(cur_controls);
+                        [test_density, test_vals] =...
+                            ksdensity(cur_tests);
+                        a1 = area(control_vals,...
+                            100*control_density./sum(control_density),...
+                            'FaceColor','#8c1515');
+                        a1.FaceAlpha = 0.5;
+                        hold on;
+                        a2 = area(test_vals,...
+                            100*test_density./sum(test_density),...
+                            'FaceColor','#09425A');
+                        a2.FaceAlpha = 0.5;
+                        [max_control,max_control_idx] =...
+                            max(100*control_density./sum(control_density));
+                        [max_test,max_test_idx] =...
+                            max(100*test_density./sum(test_density));
+                        plot([control_vals(max_control_idx),test_vals(max_test_idx)],...
+                            (0.1 + max([max_control,max_test]))*ones(1,2),...
+                            'Color',[0 0 0],'LineWidth',1);
+                        all_measurements = vertcat(cur_controls,cur_tests);
+                        all_label = ones(size(all_measurements));
+                        all_label(1:length(cur_controls)) = 0;
+                        p = anovan(all_measurements,all_label,'display','off');
+                        text(...
+                            mean([control_vals(max_control_idx),test_vals(max_test_idx)]),...
+                            0.15 + max([max_control,max_test]),...
+                            sigstars(p),...
+                           'FontSize',12,...
+                           'HorizontalAlignment','center');
+                    end
+                    xlabel('EB intensity [A.U.]');
+                    ylabel('# Vessels [%]');
+                    legend([a1,a2],{'control','MB + FUS'});
+                    if isnumeric(numstd) && ~isempty(numstd)
+                       l1 = xline(mean(cur_controls)+numstd*std(cur_controls),...
+                           'LineWidth',2,'LineStyle','--');
+                       legend([a1,a2,l1],{'control','MB + FUS',...
+                           ['Control mean + ',num2str(numstd),' SDs']});
+                    end
                 end
                 xlim([0,1]);
                 ylim([0,5]);
@@ -612,28 +633,27 @@ classdef EB_analysis
             xticklabels({'control','MB + FUS'});
             ylabel('Diameter [um]');
         end
-        function perc_tbl = openedHist(obj,varargin)
+        function perc_tbl = openedHist(obj,ths,varargin)
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
             %   ths - array of diameters to be used as diameter groups.
             %       default = [2:10]
+            % Name-Value pair arguements:
             %   Intrabrain - logical flag:
             %       0 = plot all brains together (default)
             %       1 = plot each brain seperatly
-            % Name-Value pair arguements:
             %   Errorbars - 'on' or 'off' (default), only shows errorbars
             %       if intrabrain is set to 1
             % Output:
-            %   perc_tbl = opening percentage table by dimeter and frame
-            
+            %   perc_tbl = opening percentage table by dimeter and frame            
             P = inputParser();
-            P.addOptional('ths',[2:10],@(x) isnumeric(x));
             P.addOptional('Intrabrain',0,@(x) sum(ismember(x,[0,1])) == 1);
             P.addOptional('Errorbars','off',...
                 @(x) sum(strcmp(x,{'on','off'})) == 1);
             P.parse(varargin{:})
-            
-            ths = P.Results.ths;
+            if nargin < 1
+                ths = 2:10;
+            end
             intrabrain = P.Results.Intrabrain;
             
             control_idx = cellfun(@(x) strcmp(x,'control'),...
