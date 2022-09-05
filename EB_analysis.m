@@ -7,6 +7,7 @@ classdef EB_analysis
         UM_PX    
     end
     methods
+        %% General tabular functions
         function obj = EB_analysis(varargin)
             % Construction of new EB_analysis object.
             % Input arguements:
@@ -43,11 +44,6 @@ classdef EB_analysis
             obj.n_px = control.res.n_px;
             obj.from_px = control.res.from_px;
             obj = obj.classify_opening;
-            if nargin < 3
-                obj.UM_PX = 0.29288;    % Default
-            else
-                obj.UM_PX = um_px;
-            end
         end
         function [new_obj_sub, new_obj_exc]  = subarea(obj,area_name)
             % Create new object with only sub area of the brain specified
@@ -123,10 +119,10 @@ classdef EB_analysis
             %    numstd - number of standard deviationd from control avarage
             %        red intensity to use as opening threshold
             if nargin <3
-                numstd = 3;
+                numstd = 2;
             end
             if nargin < 2
-               ths = 2:15;
+               ths = 2:10;
             end
             new_obj = obj;
             control_idx = cellfun(@(x) strcmp(x,'control'),...
@@ -184,8 +180,20 @@ classdef EB_analysis
                end
            end
            new_obj.segment_tbl(rm_rows,:) = [];
+           new_obj = new_obj.classify_opening;
         end
-        
+        function new_obj = remove_penetrating(obj, T_diam, T_len)
+            % Function to remove vessels that have both small diameter and
+            % short length (directed at penetrating vessels)
+            % Inputs:
+            %   T_diam = diameter threshold [um]
+            %   T_len = length threshold [um]
+            new_obj = obj;
+            new_obj.segment_tbl(...
+                new_obj.segment_tbl.median_segment_diam_um<T_diam &...
+                new_obj.segment_tbl.len<T_len,:) = [];
+            new_obj = new_obj.classify_opening;
+        end
         %% Plotting functions
         function scatterPlot(obj)
             % Simple scatter plot of all the vessel segments as 2D points 
@@ -207,7 +215,7 @@ classdef EB_analysis
             xlabel('median segment diameter [um]'); 
             ylabel('Median red pixel intensity [A.U.]');
         end
-        function fitplot(obj,ths, fitType)
+        function fitplot(obj,ths,fitType)
             % line plot with two lines representing the control and test
             % samples in the diameter-extravasation plane, each line is
             % added with the error bars.
@@ -236,7 +244,7 @@ classdef EB_analysis
             control_red_std = cellfun(@(x) std(x),control_groups);
             errorbar(control_red,control_red_std,'Color','#8c1515');...
                 hold on; errorbar(test_red,test_red_std,'Color','#09425A');
-            if nargin >= 2
+            if nargin > 2
                 if isa(fitType,'char')  % if user specified a single fitType object for both groups
                     tmp = fitType;
                     fitType = cell(1,2); fitType(:) = cellstr(tmp);
