@@ -9,13 +9,16 @@ classdef EBreaverApp < matlab.apps.AppBase
         NormalizeredCheckBox            matlab.ui.control.CheckBox
         CreateanalysisobjectButton      matlab.ui.control.Button
         OpenREAVERGUIButton             matlab.ui.control.Button
-        BrowseTestButton                matlab.ui.control.Button
+        BrowseMBstButton                matlab.ui.control.Button
+        BrowseNBstButton                matlab.ui.control.Button
         BrowseControlButton             matlab.ui.control.Button
         ProcessfoldersButton            matlab.ui.control.Button
         perivascularwidthpxSpinner      matlab.ui.control.Spinner
         perivascularwidthpxSpinnerLabel  matlab.ui.control.Label
-        TestdirectoryEditField          matlab.ui.control.EditField
-        TestdirectoryEditFieldLabel     matlab.ui.control.Label
+        MBsdirectoryEditField          matlab.ui.control.EditField
+        MBsdirectoryEditFieldLabel     matlab.ui.control.Label
+        NBsdirectoryEditField          matlab.ui.control.EditField
+        NBsdirectoryEditFieldLabel     matlab.ui.control.Label
         ControldirectoryEditField       matlab.ui.control.EditField
         ControldirectoryEditFieldLabel  matlab.ui.control.Label
     end
@@ -37,7 +40,8 @@ classdef EBreaverApp < matlab.apps.AppBase
         % Button pushed function: ProcessfoldersButton
         function ProcessfoldersButtonPushed(app, event)
             control_dir = app.ControldirectoryEditField.Value;
-            test_dir = app.TestdirectoryEditField.Value;
+            MBs_dir = app.MBsdirectoryEditField.Value;
+            NBs_dir = app.NBsdirectoryEditField.Value;
             n_px = app.perivascularwidthpxSpinner.Value;
             diffu = app.startDistSpinner.Value;
             normalize_red = app.NormalizeredCheckBox.Value;
@@ -46,10 +50,15 @@ classdef EBreaverApp < matlab.apps.AppBase
                 analyze_entire_folder(n_px,control_dir,normalize_red,diffu);
                 disp('Finished processing control files')
             end
-            if ~isempty(test_dir)
-                disp('Starting to work on test files')
-                analyze_entire_folder(n_px,test_dir,normalize_red,diffu); 
-                disp('Finished processing test files')
+            if ~isempty(MBs_dir)
+                disp('Starting to work on MBs files')
+                analyze_entire_folder(n_px,MBs_dir,normalize_red,diffu); 
+                disp('Finished processing MBs files')
+            end
+            if ~isempty(NBs_dir)
+                disp('Starting to work on NBs files')
+                analyze_entire_folder(n_px,NBs_dir,normalize_red,diffu); 
+                disp('Finished processing NBs files')
             end
         end
 
@@ -60,10 +69,17 @@ classdef EBreaverApp < matlab.apps.AppBase
             figure(app.EBreaverUIFigure)
         end
 
-        % Button pushed function: BrowseTestButton
-        function BrowseTestButtonPushed(app, event)
-            test_dir = uigetdir(pwd,'Choose test directory');
-            app.TestdirectoryEditField.Value = test_dir;
+        % Button pushed function: BrowseMBstButton
+        function BrowseMBstButtonPushed(app, event)
+            MBs_dir = uigetdir(pwd,'Choose MBs directory');
+            app.MBsdirectoryEditField.Value = MBs_dir;
+            figure(app.EBreaverUIFigure)
+        end
+        
+        % Button pushed function: BrowseNBsButton
+        function BrowseNBsButtonPushed(app, event)
+            NBs_dir = uigetdir(pwd,'Choose NBs directory');
+            app.NBsdirectoryEditField.Value = NBs_dir;
             figure(app.EBreaverUIFigure)
         end
 
@@ -108,22 +124,32 @@ classdef EBreaverApp < matlab.apps.AppBase
             % Create ControldirectoryEditFieldLabel
             app.ControldirectoryEditFieldLabel = uilabel(app.EBreaverUIFigure);
             app.ControldirectoryEditFieldLabel.HorizontalAlignment = 'right';
-            app.ControldirectoryEditFieldLabel.Position = [70 254 94 22];
+            app.ControldirectoryEditFieldLabel.Position = [70 270 94 22];
             app.ControldirectoryEditFieldLabel.Text = 'Control directory';
 
             % Create ControldirectoryEditField
             app.ControldirectoryEditField = uieditfield(app.EBreaverUIFigure, 'text');
-            app.ControldirectoryEditField.Position = [179 253 204 23];
+            app.ControldirectoryEditField.Position = [179 269 204 23];
 
-            % Create TestdirectoryEditFieldLabel
-            app.TestdirectoryEditFieldLabel = uilabel(app.EBreaverUIFigure);
-            app.TestdirectoryEditFieldLabel.HorizontalAlignment = 'right';
-            app.TestdirectoryEditFieldLabel.Position = [70 212 77 22];
-            app.TestdirectoryEditFieldLabel.Text = 'Test directory';
+            % Create MBsdirectoryEditFieldLabel
+            app.MBsdirectoryEditFieldLabel = uilabel(app.EBreaverUIFigure);
+            app.MBsdirectoryEditFieldLabel.HorizontalAlignment = 'right';
+            app.MBsdirectoryEditFieldLabel.Position = [70 231 77 22];
+            app.MBsdirectoryEditFieldLabel.Text = 'MBs directory';
 
-            % Create TestdirectoryEditField
-            app.TestdirectoryEditField = uieditfield(app.EBreaverUIFigure, 'text');
-            app.TestdirectoryEditField.Position = [179 211 204 23];
+            % Create MBsdirectoryEditField
+            app.MBsdirectoryEditField = uieditfield(app.EBreaverUIFigure, 'text');
+            app.MBsdirectoryEditField.Position = [179 230 204 23];
+
+            % Create NBsdirectoryEditFieldLabel
+            app.NBsdirectoryEditFieldLabel = uilabel(app.EBreaverUIFigure);
+            app.NBsdirectoryEditFieldLabel.HorizontalAlignment = 'right';
+            app.NBsdirectoryEditFieldLabel.Position = [70 192 77 22];
+            app.NBsdirectoryEditFieldLabel.Text = 'NBs directory';
+
+            % Create NBsdirectoryEditField
+            app.NBsdirectoryEditField = uieditfield(app.EBreaverUIFigure, 'text');
+            app.NBsdirectoryEditField.Position = [179 191 204 23];
 
             % Create perivascularwidthpxSpinnerLabel
             app.perivascularwidthpxSpinnerLabel = uilabel(app.EBreaverUIFigure);
@@ -144,14 +170,20 @@ classdef EBreaverApp < matlab.apps.AppBase
             % Create BrowseControlButton
             app.BrowseControlButton = uibutton(app.EBreaverUIFigure, 'push');
             app.BrowseControlButton.ButtonPushedFcn = createCallbackFcn(app, @BrowseControlButtonPushed, true);
-            app.BrowseControlButton.Position = [404 253 72 22];
+            app.BrowseControlButton.Position = [404 270 72 22];
             app.BrowseControlButton.Text = 'Browse';
 
-            % Create BrowseTestButton
-            app.BrowseTestButton = uibutton(app.EBreaverUIFigure, 'push');
-            app.BrowseTestButton.ButtonPushedFcn = createCallbackFcn(app, @BrowseTestButtonPushed, true);
-            app.BrowseTestButton.Position = [404 212 72 22];
-            app.BrowseTestButton.Text = 'Browse';
+            % Create BrowseMBsButton
+            app.BrowseMBstButton = uibutton(app.EBreaverUIFigure, 'push');
+            app.BrowseMBstButton.ButtonPushedFcn = createCallbackFcn(app, @BrowseMBstButtonPushed, true);
+            app.BrowseMBstButton.Position = [404 231 72 22];
+            app.BrowseMBstButton.Text = 'Browse';
+
+            % Create BrowseNBsButton
+            app.BrowseNBstButton = uibutton(app.EBreaverUIFigure, 'push');
+            app.BrowseNBstButton.ButtonPushedFcn = createCallbackFcn(app, @BrowseNBsButtonPushed, true);
+            app.BrowseNBstButton.Position = [404 192 72 22];
+            app.BrowseNBstButton.Text = 'Browse';
 
             % Create OpenREAVERGUIButton
             app.OpenREAVERGUIButton = uibutton(app.EBreaverUIFigure, 'push');
