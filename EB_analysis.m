@@ -827,19 +827,28 @@ classdef EB_analysis
             % histogram of blood vessel diameter. 
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
+            MB_idx = cellfun(@(x) strcmp(x,'MB'),...
+                obj.segment_tbl.label);
+            NB_idx = cellfun(@(x) strcmp(x,'NB'),...
+                obj.segment_tbl.label);
             control_diams = obj.segment_tbl.median_segment_diam_um(control_idx);
-            MB_diams = obj.segment_tbl.median_segment_diam_um(~control_idx);
+            MB_diams = obj.segment_tbl.median_segment_diam_um(MB_idx);
+            NB_diams = obj.segment_tbl.median_segment_diam_um(NB_idx);
             histogram(control_diams,0.5:1:25.5,...
-                'Normalization','probability','FaceColor','#007C92'); 
+                'Normalization','probability','FaceColor','#8c1515'); 
             hold on;
             histogram(MB_diams,0.5:1:25.5,'Normalization','probability',...
-                'FaceColor','#E98300');
+                'FaceColor','#09425A');
+            hold on;
+            histogram(NB_diams,0.5:1:25.5,'Normalization','probability',...
+                'FaceColor','#EDB120');
             legend(['Control-',num2str(numel(control_diams)),' total segments']...
-                ,['Treatment-',num2str(numel(MB_diams)),' total segments']);
+                ,['MBs Treatment-',num2str(numel(MB_diams)),' total segments']...
+                ,['NBs Treatment-',num2str(numel(NB_diams)),' total segments']);
             xlabel('Vessel diameter [um]'); ylabel('% of total vessels');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
-            p = anova1(obj.segment_tbl.median_segment_diam_um,~control_idx)
+            p = anova1(obj.segment_tbl.median_segment_diam_um, MB_idx)
             xticklabels({'control','MB + FUS'});
             ylabel('Diameter [um]');
         end
