@@ -334,7 +334,7 @@ classdef EB_analysis
             else
                 legend('control','MB + FUS', 'NB + FUS');
             end
-            xlabel('median segment diameter [um]'); 
+            xlabel('median segment diameter [\mum]'); 
             ylabel('Median red pixel intensity [A.U.]');
         end
         function violinplot(obj,ths,varargin)
@@ -425,7 +425,10 @@ classdef EB_analysis
             %       5 = plot only the NB group and calculate statistical
             %           significance bewteen each diameter and the smallest
             %           diameter
-            %       6 = plot control, MB and NB calculate statistical
+            %       6 = plot control and NB and calculate statistical
+            %           significance of difference between groups at each
+            %           diameter seperatly
+            %       7 = plot control, MB and NB calculate statistical
             %           significance of difference between groups at each
             %           diameter seperatly
             %       -1 = plot only the control group and calculate statistical
@@ -497,8 +500,8 @@ classdef EB_analysis
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
                     for i = 2:numel(ths)
-                       [~,p] = tMB2(MB_groups{i-1},MB_groups{i});
-                       st = sigstars(p);
+                       [~,p_MB] = ttest2(MB_groups{i-1},MB_groups{i});
+                       st = sigstars(p_MB);
                        if ~strcmp(st,'ns')
                            maxy = max(sum(MB_mu_median(1:2,:),1))*(1+i/20);
                            line([(i-1)*2,(i+1)*2],maxy*[1,1]);
@@ -523,8 +526,8 @@ classdef EB_analysis
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
                     for i = 2:numel(ths)
-                       [~,p] = tMB2(MB_groups{i-1},MB_groups{i});
-                       st = sigstars(p);
+                       [~,p_MB] = ttest2(MB_groups{i-1},MB_groups{i});
+                       st = sigstars(p_MB);
                        if ~strcmp(st,'ns')
                            maxy = max(sum(NB_mu_median(1:2,:),1))*(1+i/20);
                            line([(i-1)*2,(i+1)*2],maxy*[1,1]);
@@ -549,11 +552,11 @@ classdef EB_analysis
                             'LineStyle','none'); 
                         xticks([]);
                         % Add significance stars of control vs MB of same diameter
-                       [~,p] = tMB2(control_groups,MB_groups);
+                       [~,p_MB] = ttest2(control_groups,MB_groups);
                        maxy = max([sum(control_mu_median),...
                            sum(MB_mu_median)]);
                        line([0.5,1.5],(maxy*1.05)*[1,1]);
-                       text(0.5,maxy*1.08,sigstars(p));
+                       text(0.5,maxy*1.08,sigstars(p_MB));
                     else
                         b1 = bar(0.75:2:(length(ths)*2),...
                             control_mu_median(1,:),0.25,...
@@ -573,21 +576,73 @@ classdef EB_analysis
                         xlabel('Vessel diameter [um]');
                         % Add significance stars of control vs MB of same diameter
                         for i = 1:length(ths)
-                           [~,p] = tMB2(control_groups{i},MB_groups{i});
+                           [~,p_MB] = ttest2(control_groups{i},MB_groups{i});
                            maxy = max([sum(control_mu_median(:,i)),sum(MB_mu_median(:,i))]);
                            x_cord = i-1;
                            line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
-                           text(x_cord*2+0.5,maxy*1.08,sigstars(p));
+                           text(x_cord*2+0.5,maxy*1.08,sigstars(p_MB));
                         end
                     end
-                    ylim([0,maxy*1.1]);
+                    ylim([0,maxy*1.3]);
                     legend([b1,b2],'control','MB + FUS');
-                    title(sprintf('[%d,%d] px',...
-                        obj.from_px,obj.from_px+obj.n_px));
+                    title('Median Red Intensity as Function of Vessel Diameter');
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
 
-                case 6  % all 3 groups (MB + NB + control)
+                case 6  % both groups (NB + control)
+                    if length(ths) == 1
+                        b1 = bar(0.75,control_mu_median(1,:),0.25,...
+                            'FaceColor','#8c1515');
+                        hold on;
+                        b2 =bar(1.25,NB_mu_median(1,:),0.25,...
+                            'FaceColor','#EDB120');
+                        errorbar(0.75,control_mu_median(1,:),...
+                            control_mu_median(2,:),control_mu_median(2,:),...
+                            'k', 'LineStyle','none');
+                        errorbar(1.25,NB_mu_median(1,:),...
+                            NB_mu_median(2,:),NB_mu_median(2,:),'k',...
+                            'LineStyle','none'); 
+                        xticks([]);
+                        % Add significance stars of control vs NB of same diameter
+                       [~,p_NB] = ttest2(control_groups,NB_groups);
+                       maxy = max([sum(control_mu_median),...
+                           sum(NB_mu_median)]);
+                       line([0.5,1.5],(maxy*1.05)*[1,1]);
+                       text(0.5,maxy*1.08,sigstars(p_NB));
+                    else
+                        b1 = bar(0.75:2:(length(ths)*2),...
+                            control_mu_median(1,:),0.25,...
+                            'FaceColor','#8c1515');
+                        hold on;
+                        b2 =bar(1.25:2:(length(ths)*2),...
+                            NB_mu_median(1,:),0.25,...
+                            'FaceColor','#EDB120');
+                        errorbar(0.75:2:(length(ths)*2),control_mu_median(1,:),...
+                            control_mu_median(2,:),control_mu_median(2,:),'k',...
+                            'LineStyle','none');
+                        errorbar(1.25:2:(length(ths)*2),NB_mu_median(1,:),...
+                            NB_mu_median(2,:),NB_mu_median(2,:),'k',...
+                            'LineStyle','none'); 
+                        xticks(1:2:(length(ths)*2));
+                        xticklabels(generate_xticks(ths));
+                        xlabel('Vessel diameter [um]');
+                        % Add significance stars of control vs NB of same diameter
+                        for i = 1:length(ths)
+                           [~,p_NB] = ttest2(control_groups{i},NB_groups{i});
+                           maxy = max([sum(control_mu_median(:,i)),sum(NB_mu_median(:,i))]);
+                           x_cord = i-1;
+                           line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
+                           text(x_cord*2+0.5,maxy*1.08,sigstars(p_NB));
+                        end
+                    end
+                    ylim([0,maxy*1.3]);
+                    legend([b1,b2],'control','NB + FUS');
+                    title('Median Red Intensity as Function of Vessel Diameter');
+                    ylabel('Median red intensity in perivascular area [A.U.]')
+
+
+
+                case 7  % all 3 groups (MB + NB + control)
                     if length(ths) == 1
                         b1 = bar(0.75,control_mu_median(1,:),0.25,...
                             'FaceColor','#8c1515');
@@ -608,7 +663,7 @@ classdef EB_analysis
                             'LineStyle','none'); 
                         xticks([]);
 %                        % Add significance stars of control vs MB of same diameter
-%                        [~,p] = tMB2(control_groups,MB_groups);
+%                        [~,p] = ttest2(control_groups,MB_groups);
 %                        maxy = max([sum(control_mu_median),...
 %                            sum(MB_mu_median)]);
 %                        line([0.5,1.5],(maxy*1.05)*[1,1]);
@@ -639,7 +694,7 @@ classdef EB_analysis
                         xlabel('Vessel diameter [\mum]');
 %                         % Add significance stars of control vs MB of same diameter
 %                         for i = 1:length(ths)
-%                            [~,p] = tMB2(control_groups{i},MB_groups{i});
+%                            [~,p] = ttest2(control_groups{i},MB_groups{i});
 %                            maxy = max([sum(control_mu_median(:,i)),sum(MB_mu_median(:,i))]);
 %                            x_cord = i-1;
 %                            line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
@@ -705,8 +760,8 @@ classdef EB_analysis
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
                     for i = 2:numel(ths)
-                       [~,p] = tMB2(control_groups{i-1},control_groups{i});
-                       st = sigstars(p);
+                       [~,p_MB] = ttest2(control_groups{i-1},control_groups{i});
+                       st = sigstars(p_MB);
                        if ~strcmp(st,'ns')
                            maxy = max(sum(MB_mu_median(1:2,:),1))*(1+i/20);
                            line([(i-1)*2,(i+1)*2],maxy*[1,1]);
