@@ -173,11 +173,15 @@ classdef EB_analysis
            % segments in both conditions.
            control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
+           MB_idx = cellfun(@(x) strcmp(x,'MB'),...
+                obj.segment_tbl.label);
+           NB_idx = cellfun(@(x) strcmp(x,'NB'),...
+                obj.segment_tbl.label);
            ths = unique(ceil(obj.segment_tbl.median_segment_diam_um));
            ths = [0,ths'];
            new_obj = obj;
            rm_rows = [];
-           for i = 1:length(ths)-1
+           for i = 1:length(ths)-1  % diameters
                cur_control = new_obj.segment_tbl.median_red(...
                    new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
                    new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
@@ -185,21 +189,59 @@ classdef EB_analysis
                cur_MB = new_obj.segment_tbl.median_red(...
                    new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
                    new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
-                   ~control_idx); 
-               if numel(cur_control) > numel(cur_MB)
-                   n_outliers = numel(cur_control)-numel(cur_MB);
-                   [~,intensity_idx] = ...
-                       sort(abs(cur_control-mean(cur_control)));
+                   MB_idx);
+               cur_NB = new_obj.segment_tbl.median_red(...
+                   new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                   new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                   NB_idx);
+               
+               [~, I] = min([numel(cur_control), numel(cur_MB), numel(cur_NB)]);
+               switch I
+                
+                   case 1   % smallest group size - control
+                   n_outliers_1 = numel(cur_MB) - numel(cur_control);
+                   [~,intensity_idx_1] = ...
+                       sort(abs(cur_MB-mean(cur_MB)), 'descend');
+                   MB_rows = find(MB_idx);
+                   rm_rows = [rm_rows;...
+                       MB_rows(intensity_idx_1(1:n_outliers_1))];
+
+                   n_outliers_2 = numel(cur_NB) - numel(cur_control);
+                   [~,intensity_idx_2] = ...
+                       sort(abs(cur_NB-mean(cur_NB)), 'descend');
+                   NB_rows = find(NB_idx);
+                   rm_rows = [rm_rows;...
+                       NB_rows(intensity_idx_2(1:n_outliers_2))];
+
+                   case 2   % smallest group size - MBs
+                   n_outliers_1 = numel(cur_control) - numel(cur_MB);
+                   [~,intensity_idx_1] = ...
+                       sort(abs(cur_control-mean(cur_control)), 'descend');
                    control_rows = find(control_idx);
                    rm_rows = [rm_rows;...
-                       control_rows(intensity_idx(1:n_outliers))];
-               else
-                   n_outliers = numel(cur_MB)-numel(cur_control);
-                   [~,intensity_idx] = ...
-                       sort(abs(cur_MB-mean(cur_MB)));
-                   MB_rows = find(~control_idx);
+                       control_rows(intensity_idx_1(1:n_outliers_1))];
+
+                   n_outliers_2 = numel(cur_NB) - numel(cur_MB);
+                   [~,intensity_idx_2] = ...
+                       sort(abs(cur_NB-mean(cur_NB)), 'descend');
+                   NB_rows = find(NB_idx);
                    rm_rows = [rm_rows;...
-                       MB_rows(intensity_idx(1:n_outliers))];
+                       NB_rows(intensity_idx_2(1:n_outliers_2))];
+
+                   case 3   % smallest group size - NBs
+                       n_outliers_1 = numel(cur_control) - numel(cur_NB);
+                       [~,intensity_idx_1] = ...
+                           sort(abs(cur_control-mean(cur_control)), 'descend');
+                       control_rows = find(control_idx);
+                       rm_rows = [rm_rows;...
+                           control_rows(intensity_idx_1(1:n_outliers_1))];
+    
+                       n_outliers_2 = numel(cur_MB) - numel(cur_NB);
+                       [~,intensity_idx_2] = ...
+                           sort(abs(cur_MB-mean(cur_MB)), 'descend');
+                       MB_rows = find(MB_idx);
+                       rm_rows = [rm_rows;...
+                           MB_rows(intensity_idx_2(1:n_outliers_2))];
                end
            end
            new_obj.segment_tbl(rm_rows,:) = [];
@@ -437,6 +479,7 @@ classdef EB_analysis
             if nargin < 3
                 groups = 2;
             end
+            
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             MB_idx = cellfun(@(x) strcmp(x,'MB'),...
@@ -640,8 +683,6 @@ classdef EB_analysis
                     title('Median Red Intensity as Function of Vessel Diameter');
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
-
-
                 case 7  % all 3 groups (MB + NB + control)
                     if length(ths) == 1
                         b1 = bar(0.75,control_mu_median(1,:),0.25,...
@@ -657,17 +698,12 @@ classdef EB_analysis
                             'k', 'LineStyle','none');
                         errorbar(1.25,MB_mu_median(1,:),...
                             MB_mu_median(2,:),MB_mu_median(2,:),'k',...
-                            'LineStyle','none'); 
+                            'LineStyle','none');
                         errorbar(1.75,NB_mu_median(1,:),...
                             NB_mu_median(2,:),NB_mu_median(2,:),'k',...
-                            'LineStyle','none'); 
+                            'LineStyle','none');
                         xticks([]);
-%                        % Add significance stars of control vs MB of same diameter
-%                        [~,p] = ttest2(control_groups,MB_groups);
-%                        maxy = max([sum(control_mu_median),...
-%                            sum(MB_mu_median)]);
-%                        line([0.5,1.5],(maxy*1.05)*[1,1]);
-%                        text(0.5,maxy*1.08,sigstars(p));
+
                     else
                         b1 = bar(0.75:2:(length(ths)*2),...
                             control_mu_median(1,:),0.25,...
@@ -685,29 +721,73 @@ classdef EB_analysis
                             'LineStyle','none');
                         errorbar(1.25:2:(length(ths)*2),MB_mu_median(1,:),...
                             MB_mu_median(2,:),MB_mu_median(2,:),'k',...
-                            'LineStyle','none'); 
+                            'LineStyle','none');
                         errorbar(1.75:2:(length(ths)*2),NB_mu_median(1,:),...
                             NB_mu_median(2,:),NB_mu_median(2,:),'k',...
-                            'LineStyle','none'); 
+                            'LineStyle','none');
                         xticks(1:2:(length(ths)*2));
                         xticklabels(generate_xticks(ths));
                         xlabel('Vessel diameter [\mum]');
-%                         % Add significance stars of control vs MB of same diameter
-%                         for i = 1:length(ths)
-%                            [~,p] = ttest2(control_groups{i},MB_groups{i});
-%                            maxy = max([sum(control_mu_median(:,i)),sum(MB_mu_median(:,i))]);
-%                            x_cord = i-1;
-%                            line([0.5,1.5]+x_cord*2,(maxy*1.05)*[1,1]);
-%                            text(x_cord*2+0.5,maxy*1.08,sigstars(p));
-%                         end
+
+                        anova_results = cell2table(cell(0,4),'VariableNames', {'Vessels_Diameter', 'Control_MBs', 'Control_NBs', 'MBs_NBs'});
+                        
+                        ymax = 0;
+                        % Add significance stars of control vs MB vs NB of same diameter
+                        for i = 1:numel(ths)
+                            data = [control_groups{i} ; MB_groups{i} ; NB_groups{i}].';
+                            group_control = repmat({'control'}, 1, length(control_groups{i}));
+                            group_MB = repmat({'MBs'}, 1, length(MB_groups{i}));
+                            group_NB = repmat({'NBs'}, 1, length(NB_groups{i}));
+                            group = {group_control{:}, group_MB{:}, group_NB{:}};
+
+                            % Perform one-way ANOVA
+                            [p, ~, stats] = anova1(data, group, "off");
+
+
+                            % Perform post-hoc tests (Tukey's honestly significant difference)
+                            [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off');
+
+                            % save results to table
+                            if i == 1
+                                diam = strcat("0", " to ", string(ths(i)));
+                            else
+                                diam = strcat(string(ths(i-1)), " to ", string(ths(i)));
+                            end
+                            p_res = num2cell(c(:, 6).');
+                            T = cell2table({diam, p_res{:}}, 'VariableNames',{'Vessels_Diameter', 'Control_MBs', 'Control_NBs', 'MBs_NBs'});
+                            anova_results = [anova_results; T];
+
+                            st_MB = sigstars(c(1, 6));
+                            st_NB = sigstars(c(2, 6));
+
+                            if ~strcmp(st_MB,'ns')
+                                MB_poses = 1.25:2:(length(ths)*2);
+                                pos = MB_poses(i);
+                                MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
+                                ymax = max([ymax, MB_y_pos + 0.05]);
+                                text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                            end
+
+                            if ~strcmp(st_NB,'ns')
+                                NB_poses = 1.75:2:(length(ths)*2);
+                                pos = NB_poses(i);
+                                NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
+                                ymax = max([ymax, NB_y_pos + 0.05]);
+                                text(pos,NB_y_pos,st_NB, 'Color', '#EDB120', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                            end
+                        end
                     end
-%                     ylim([0,maxy*1.1]);
+
                     legend([b1,b2, b3],'control','MB + FUS', 'NB + FUS');
+                    ylim([0, ymax]);
                     title('Median Red Intensity as Function of Vessel Diameter');
-                    ylabel('Median red intensity in perivascular area [A.U.]')
+                    ylabel('Median red intensity in perivascular area [A.U.]');
+                    
+                    % save the anova table results
+                    writetable(anova_results, 'anova_res.csv');
                 
                 case 0  % diffrence MB-control
-                    bar(0.75:2:(length(ths)*2+0.75),...
+                    bar(0.75:2:((length(ths)-1)*2+0.75),...
                     MB_mu_median(1,:)-control_mu_median(1,:),0.25,...
                     'FaceColor','#09425A');
                     xticks(1:2:(length(ths)*2+1));
@@ -718,7 +798,7 @@ classdef EB_analysis
                     ylabel('MB-control difference in Median red intensity [A.U.]')
 
                 case 3  % diffrence NB-control
-                    bar(0.75:2:(length(ths)*2+0.75),...
+                    bar(0.75:2:((length(ths)-1)*2+0.75),...
                     NB_mu_median(1,:)-control_mu_median(1,:),0.25,...
                     'FaceColor','#EDB120');
                     xticks(1:2:(length(ths)*2+1));
@@ -729,7 +809,7 @@ classdef EB_analysis
                     ylabel('NB-control difference in Median red intensity [A.U.]')
 
                 case 4  % diffrence MB-control and NB-control
-                    b1 = bar(0.75:2:(length(ths)*2+0.75),...
+                    b1 = bar(0.75:2:((length(ths)-1)*2+0.75),...
                         MB_mu_median(1,:)-control_mu_median(1,:),0.25,...
                         'FaceColor','#09425A');
                     hold on;
@@ -787,7 +867,7 @@ classdef EB_analysis
             P.addParameter('Mode','histogram',...
                 @(x) sum(strcmp(x,{'histogram','pdf'}))==1);
             P.parse(varargin{:});
-            showmode = strcmp(P.Results.Mode,'histogram');
+            showmode = strcmp(P.Results.Mode,'pdf');
             if nargin < 1
                 ths = 2:10;
             end
@@ -796,20 +876,28 @@ classdef EB_analysis
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
+            MB_idx = cellfun(@(x) strcmp(x,'MB'),...
+                obj.segment_tbl.label);
+            NB_idx = cellfun(@(x) strcmp(x,'NB'),...
+                obj.segment_tbl.label);
             figure;
             thresh_specified = (nargin>1);
             if thresh_specified
                 control_groups = ...
                     intogroups(obj.segment_tbl(control_idx,:),ths);
                 MB_groups = ...
-                    intogroups(obj.segment_tbl(~control_idx,:),ths);   
+                    intogroups(obj.segment_tbl(MB_idx,:),ths);
+                NB_groups = ...
+                    intogroups(obj.segment_tbl(NB_idx,:),ths);
                 len = numel(ths);
                 ths = [0,ths];
             else
                 control_groups =...
                     obj.segment_tbl.median_red(control_idx);
                 MB_groups = ...
-                    obj.segment_tbl.median_red(~control_idx);
+                    obj.segment_tbl.median_red(MB_idx);
+                NB_groups = ...
+                    obj.segment_tbl.median_red(NB_idx);
                 len = 1;
             end
             for i = 1:len
@@ -817,9 +905,11 @@ classdef EB_analysis
                     subplot(ceil(sqrt(len)),ceil(sqrt(len)),i);
                     cur_controls = control_groups{i};
                     cur_MBs = MB_groups{i};
+                    cur_NBs = NB_groups{i};
                 else
                     cur_controls = control_groups;
                     cur_MBs = MB_groups;
+                    cur_NBs = NB_groups;
                 end
                 if ~isempty(cur_controls)
                     if showmode
@@ -828,11 +918,16 @@ classdef EB_analysis
                         hold on;
                         a2 = histogram(cur_MBs,100,'FaceColor','#09425A',...
                             'Normalization','probability');
+                        hold on;
+                        a3 = histogram(cur_NBs,100,'FaceColor','#EDB120',...
+                            'Normalization','probability');
                     else
                         [control_density, control_vals] =...
                             ksdensity(cur_controls);
                         [MB_density, MB_vals] =...
                             ksdensity(cur_MBs);
+                        [NB_density, NB_vals] =...
+                            ksdensity(cur_NBs);
                         a1 = area(control_vals,...
                             100*control_density./sum(control_density),...
                             'FaceColor','#8c1515');
@@ -842,31 +937,38 @@ classdef EB_analysis
                             100*MB_density./sum(MB_density),...
                             'FaceColor','#09425A');
                         a2.FaceAlpha = 0.5;
+                        hold on;
+                        a3 = area(NB_vals,...
+                            100*NB_density./sum(NB_density),...
+                            'FaceColor','#EDB120');
+                        a3.FaceAlpha = 0.5;
                         [max_control,max_control_idx] =...
                             max(100*control_density./sum(control_density));
                         [max_MB,max_MB_idx] =...
                             max(100*MB_density./sum(MB_density));
-                        plot([control_vals(max_control_idx),MB_vals(max_MB_idx)],...
-                            (0.1 + max([max_control,max_MB]))*ones(1,2),...
+                        [max_NB,max_NB_idx] =...
+                            max(100*NB_density./sum(NB_density));
+                        plot([control_vals(max_control_idx),MB_vals(max_MB_idx),NB_vals(max_NB_idx)],...
+                            (0.1 + max([max_control,max_MB, max_NB]))*ones(1,3),...
                             'Color',[0 0 0],'LineWidth',1);
-                        all_measurements = vertcat(cur_controls,cur_MBs);
+                        all_measurements = vertcat(cur_controls,cur_MBs, cur_NBs);
                         all_label = ones(size(all_measurements));
                         all_label(1:length(cur_controls)) = 0;
                         p = anovan(all_measurements,all_label,'display','off');
                         text(...
-                            mean([control_vals(max_control_idx),MB_vals(max_MB_idx)]),...
-                            0.15 + max([max_control,max_MB]),...
+                            mean([control_vals(max_control_idx),MB_vals(max_MB_idx), NB_vals(max_NB_idx)]),...
+                            0.15 + max([max_control,max_MB, max_NB]),...
                             sigstars(p),...
                            'FontSize',12,...
                            'HorizontalAlignment','center');
                     end
                     xlabel('EB intensity [A.U.]');
                     ylabel('# Vessels [%]');
-                    legend([a1,a2],{'control','MB + FUS'});
+                    legend([a1,a2, a3],{'control','MB + FUS', 'NB + FUS'});
                     if isnumeric(numstd) && ~isempty(numstd)
                        l1 = xline(mean(cur_controls)+numstd*std(cur_controls),...
                            'LineWidth',2,'LineStyle','--');
-                       legend([a1,a2,l1],{'control','MB + FUS',...
+                       legend([a1,a2, a3, l1],{'control','MB + FUS','NB + FUS',...
                            ['Control mean + ',num2str(numstd),' SDs']});
                     end
                 end
@@ -907,7 +1009,7 @@ classdef EB_analysis
             xticklabels({'control','MB + FUS'});
             ylabel('Diameter [um]');
         end
-        function perc_tbl = openedHist(obj,ths,varargin)
+        function [perc_tbl_MB, perc_tbl_NB] = openedHist(obj,ths,varargin)
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
             %   ths - array of diameters to be used as diameter groups.
@@ -1016,7 +1118,9 @@ classdef EB_analysis
             title('Opened Vessel Fraction as Function of Vessel Diameter');
             legend([b1, b2], 'MB', 'NB')
             
-            perc_tbl = array2table(perc,'VariableNames',MB_frames,...
+            perc_tbl_MB = array2table(perc_MB,'VariableNames',MB_frames,...
+                'RowNames',generate_xticks(ths(2:end)));
+            perc_tbl_NB = array2table(perc_NB,'VariableNames',NB_frames,...
                 'RowNames',generate_xticks(ths(2:end)));
         end
         function regionHistogram(obj)
