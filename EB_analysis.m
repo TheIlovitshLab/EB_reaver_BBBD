@@ -288,6 +288,7 @@ classdef EB_analysis
                 obj.from_px,obj.from_px+obj.n_px));
             xlabel('median segment diameter [um]'); 
             ylabel('Median red pixel intensity [A.U.]');
+            xlim([0 15])
         end
         function fitplot(obj,ths,fitType)
             % line plot with two lines representing the control and MB
@@ -379,24 +380,33 @@ classdef EB_analysis
             xlabel('median segment diameter [\mum]'); 
             ylabel('Median red pixel intensity [A.U.]');
         end
-        function violinplot(obj,ths,varargin)
+        function violinplot(obj,ths,groups, varargin)
             % Implementation of violin plot
             % Inputs:
             %   ths (optional)- array of diameters to be used as x-axis.
             %       vessels with diameter larger than ths(end) will not be
             %       presented. if ths not specified a single violin will be
             %       plotted for all vessel diameters
+            %   groups - switch with 3 options for plotting, if not specified, default = 0:
+            %       0 = control + MB
+            %       1 = control + NB
+            %       2 = MB + NB
             %   varargin - input arguements of the varargin function by
             %       B. Bechtold
             %       (https://github.com/bastibe/Violinplot-Matlab)
+            
             control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            MB_idx = cellfun(@(x) strcmp(x,'MB'),...
+                obj.segment_tbl.label);
+            NB_idx = cellfun(@(x) strcmp(x,'NB'),...
                 obj.segment_tbl.label);
             figure;
             if nargin < 2   % No diameter thresholds specified
                 control_groups = ...
                     obj.segment_tbl.median_red(control_idx);
                 MB_groups = ...
-                    obj.segment_tbl.median_red(~control_idx);
+                    obj.segment_tbl.median_red(MB_idx);
                 control_groups = rmoutliers(control_groups);
                 MB_groups = rmoutliers(MB_groups);
                 Violin({control_groups},1,...
@@ -409,40 +419,120 @@ classdef EB_analysis
                 xticks([]);
                 hold off;
             else
-                control_groups = ...
-                    intogroups(obj.segment_tbl(control_idx,:),ths);
-                MB_groups = ...
-                    intogroups(obj.segment_tbl(~control_idx,:),ths);
-                % remove outliers
-                control_groups = cellfun(@(x) rmoutliers(x),...
-                    control_groups,'UniformOutput',false);
-                MB_groups = cellfun(@(x) rmoutliers(x),...
-                    MB_groups,'UniformOutput',false);
-                for i = 1:numel(control_groups)
-                    if ~isempty(control_groups{i})
-                        Violin(control_groups(i),i,...
-                            'HalfViolin','left','ViolinColor',{[1,0,0]});
-                        hold on;
-                    end
+                if nargin < 3
+                    groups = 0;
                 end
-                for i = 1:numel(MB_groups)
-                    if ~isempty(MB_groups{i})
-                        Violin(MB_groups(i),i,...
-                            'HalfViolin','right','ViolinColor',{[0,0,1]});
-                        hold on;
+                switch groups
+                    case 0
+                        control_groups = ...
+                            intogroups(obj.segment_tbl(control_idx,:),ths);
+                        MB_groups = ...
+                            intogroups(obj.segment_tbl(MB_idx,:),ths);
+                        % remove outliers
+                        control_groups = cellfun(@(x) rmoutliers(x),...
+                            control_groups,'UniformOutput',false);
+                        MB_groups = cellfun(@(x) rmoutliers(x),...
+                            MB_groups,'UniformOutput',false);
+                        for i = 1:numel(control_groups)
+                            if ~isempty(control_groups{i})
+                                Violin(control_groups(i),i,...
+                                    'HalfViolin','left','ViolinColor',{[1,0,0]});
+                                hold on;
+                            end
+                        end
+                        for i = 1:numel(MB_groups)
+                            if ~isempty(MB_groups{i})
+                                Violin(MB_groups(i),i,...
+                                    'HalfViolin','right','ViolinColor',{[0,0,1]});
+                                hold on;
+                            end
+                        end
+                        xticks([1:numel(control_groups)]);
+                        xticklabels(generate_xticks(ths));
+                        xlabel('Diameter [um]');
+                        hold off;
+                    
+                        ylabel('Median red intensity in perivscular area [A.U.]');
+                        ax = gca;
+                        ch = get(ax,'Children');
+                        red_envalope = ch(end-1);
+                        blue_envalope = ch(7);
+                        legend([red_envalope,blue_envalope],{'control','MB + FUS'})
+                        box;
+
+                case 1  % control - NB
+                    control_groups = ...
+                        intogroups(obj.segment_tbl(control_idx,:),ths);
+                    NB_groups = ...
+                        intogroups(obj.segment_tbl(NB_idx,:),ths);
+                    % remove outliers
+                    control_groups = cellfun(@(x) rmoutliers(x),...
+                        control_groups,'UniformOutput',false);
+                    NB_groups = cellfun(@(x) rmoutliers(x),...
+                        NB_groups,'UniformOutput',false);
+                    for i = 1:numel(control_groups)
+                        if ~isempty(control_groups{i})
+                            Violin(control_groups(i),i,...
+                                'HalfViolin','left','ViolinColor',{[1,0,0]});
+                            hold on;
+                        end
                     end
+                    for i = 1:numel(NB_groups)
+                        if ~isempty(NB_groups{i})
+                            Violin(NB_groups(i),i,...
+                                'HalfViolin','right','ViolinColor',{[0,1,0]});
+                            hold on;
+                        end
+                    end
+                    xticks([1:numel(control_groups)]);
+                    xticklabels(generate_xticks(ths));
+                    xlabel('Diameter [um]');
+                    hold off;
+                    ylabel('Median red intensity in perivscular area [A.U.]');
+                    ax = gca;
+                    ch = get(ax,'Children');
+                    red_envalope = ch(end-1);
+                    blue_envalope = ch(7);
+                    legend([red_envalope,blue_envalope],{'control','NB + FUS'})
+                    box;
+
+               case 2  % MB - NB
+                    MB_groups = ...
+                        intogroups(obj.segment_tbl(MB_idx,:),ths);
+                    NB_groups = ...
+                        intogroups(obj.segment_tbl(NB_idx,:),ths);
+                    % remove outliers
+                    MB_groups = cellfun(@(x) rmoutliers(x),...
+                        MB_groups,'UniformOutput',false);
+                    NB_groups = cellfun(@(x) rmoutliers(x),...
+                        NB_groups,'UniformOutput',false);
+                    for i = 1:numel(MB_groups)
+                        if ~isempty(MB_groups{i})
+                            Violin(MB_groups(i),i,...
+                                'HalfViolin','left','ViolinColor',{[0,0,1]});
+                            hold on;
+                        end
+                    end
+                    for i = 1:numel(NB_groups)
+                        if ~isempty(NB_groups{i})
+                            Violin(NB_groups(i),i,...
+                                'HalfViolin','right','ViolinColor',{[0,1,0]});
+                            hold on;
+                        end
+                    end
+                    xticks([1:numel(MB_groups)]);
+                    xticklabels(generate_xticks(ths));
+                    xlabel('Diameter [um]');
+                    hold off;
+                    ylabel('Median red intensity in perivscular area [A.U.]');
+                    ax = gca;
+                    ch = get(ax,'Children');
+                    red_envalope = ch(end-1);
+                    blue_envalope = ch(7);
+                    legend([red_envalope,blue_envalope],{'MB + FUS','NB + FUS'})
+                    box;
                 end
-                xticks([1:numel(control_groups)]);
-                xticklabels(generate_xticks(ths));
-                xlabel('Diameter [um]');
-                hold off;
             end
-            ylabel('Median red intensity in perivscular area [A.U.]');
-            ax = gca;
-            ch = get(ax,'Children');
-            red_envalope = ch(end-1);
-            blue_envalope = ch(7);
-            legend([red_envalope,blue_envalope],{'control','MB + FUS'})
         end
         function barplot(obj,ths,groups)
             % Bar plot with significance stars.
@@ -732,49 +822,78 @@ classdef EB_analysis
                         anova_results = cell2table(cell(0,4),'VariableNames', {'Vessels_Diameter', 'Control_MBs', 'Control_NBs', 'MBs_NBs'});
                         
                         ymax = 0;
+
                         % Add significance stars of control vs MB vs NB of same diameter
+                        data = [];
+                        bubble_type = [];
+                        diameter = [];
+                        diams = [];
                         for i = 1:numel(ths)
-                            data = [control_groups{i} ; MB_groups{i} ; NB_groups{i}].';
-                            group_control = repmat({'control'}, 1, length(control_groups{i}));
-                            group_MB = repmat({'MBs'}, 1, length(MB_groups{i}));
-                            group_NB = repmat({'NBs'}, 1, length(NB_groups{i}));
-                            group = {group_control{:}, group_MB{:}, group_NB{:}};
-
-                            % Perform one-way ANOVA
-                            [p, ~, stats] = anova1(data, group, "off");
-
-
-                            % Perform post-hoc tests (Tukey's honestly significant difference)
-                            [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off');
-
                             % save results to table
                             if i == 1
                                 diam = strcat("0", " to ", string(ths(i)));
                             else
                                 diam = strcat(string(ths(i-1)), " to ", string(ths(i)));
                             end
-                            p_res = num2cell(c(:, 6).');
-                            T = cell2table({diam, p_res{:}}, 'VariableNames',{'Vessels_Diameter', 'Control_MBs', 'Control_NBs', 'MBs_NBs'});
-                            anova_results = [anova_results; T];
+                            diams = [diams diam];
 
-                            st_MB = sigstars(c(1, 6));
-                            st_NB = sigstars(c(2, 6));
+                            data = [data.' ; control_groups{i} ; MB_groups{i} ; NB_groups{i}].';
+                            group_control = repmat(["control"], 1, length(control_groups{i}));
+                            group_MB = repmat(["MBs"], 1, length(MB_groups{i}));
+                            group_NB = repmat(["NBs"], 1, length(NB_groups{i}));
+                            bubble_type = [bubble_type, group_control, group_MB, group_NB];
+                            group_diameter = repmat([diam], 1, length(control_groups{i})+length(MB_groups{i})+length(NB_groups{i}));
+                            diameter = [diameter, group_diameter];
+                        end
+                    end
+                    % Perform ANOVA
+                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
+                    % Perform post-hoc tests (Tukey's honestly significant difference)
+                    [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
 
-                            if ~strcmp(st_MB,'ns')
-                                MB_poses = 1.25:2:(length(ths)*2);
-                                pos = MB_poses(i);
-                                MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
-                                ymax = max([ymax, MB_y_pos + 0.05]);
-                                text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                    tbl = array2table(c,"VariableNames", ...
+                    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                    tbl.("Group A")=gnames(tbl.("Group A"));
+                    tbl.("Group B")=gnames(tbl.("Group B"));
+                    
+                    idx_keep = [];
+                    p_control_MB = [];
+                    p_control_NB = [];
+                    p_MB_NB = [];
+                    for row=1:height(tbl)
+                        if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                            idx_keep = [idx_keep, row];
+                            if strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'M')
+                                p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+                            elseif strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+                            elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
                             end
+                        end
+                    end
+                    tbl =  tbl(idx_keep, :);
+                    anova_results = array2table([diams.', p_control_MB.', p_control_NB.', p_MB_NB.'],"VariableNames", ...
+                        ["Vessels_Diameter","Control_MBs","Control_NBs","MBs_NBs"]);
+                    
+                    for i = 1:numel(ths)
+                        st_MB = sigstars(p_control_MB(i));
+                        st_NB = sigstars(p_control_NB(i));
 
-                            if ~strcmp(st_NB,'ns')
-                                NB_poses = 1.75:2:(length(ths)*2);
-                                pos = NB_poses(i);
-                                NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
-                                ymax = max([ymax, NB_y_pos + 0.05]);
-                                text(pos,NB_y_pos,st_NB, 'Color', '#EDB120', 'HorizontalAlignment', 'center', 'FontSize', 12);
-                            end
+                        if ~strcmp(st_MB,'ns')
+                            MB_poses = 1.25:2:(length(ths)*2);
+                            pos = MB_poses(i);
+                            MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
+                            ymax = max([ymax, MB_y_pos + 0.05]);
+                            text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                        end
+
+                        if ~strcmp(st_NB,'ns')
+                            NB_poses = 1.75:2:(length(ths)*2);
+                            pos = NB_poses(i);
+                            NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
+                            ymax = max([ymax, NB_y_pos + 0.05]);
+                            text(pos,NB_y_pos,st_NB, 'Color', '#EDB120', 'HorizontalAlignment', 'center', 'FontSize', 12);
                         end
                     end
 
@@ -948,9 +1067,9 @@ classdef EB_analysis
                             max(100*MB_density./sum(MB_density));
                         [max_NB,max_NB_idx] =...
                             max(100*NB_density./sum(NB_density));
-                        plot([control_vals(max_control_idx),MB_vals(max_MB_idx),NB_vals(max_NB_idx)],...
-                            (0.1 + max([max_control,max_MB, max_NB]))*ones(1,3),...
-                            'Color',[0 0 0],'LineWidth',1);
+%                         plot([control_vals(max_control_idx),MB_vals(max_MB_idx),NB_vals(max_NB_idx)],...
+%                             (0.1 + max([max_control,max_MB, max_NB]))*ones(1,3),...
+%                             'Color',[0 0 0],'LineWidth',1);
                         all_measurements = vertcat(cur_controls,cur_MBs, cur_NBs);
                         all_label = ones(size(all_measurements));
                         all_label(1:length(cur_controls)) = 0;
@@ -1082,6 +1201,58 @@ classdef EB_analysis
                             [],std(perc_NB,0,2,'omitnan'),'k',...
                             'LineStyle','none');
                     end
+                    
+                    x_coords = 1:2:((length(ths)-1)*2);
+
+                     % Add significance stars of control vs MB vs NB of same diameter
+                    data = [];
+                    bubble_type = [];
+                    diameter = [];
+                    diams = [];
+                    for i = 1:numel(ths)-1
+                        % save results to table
+                        if i == numel(ths)
+                            diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                        else
+                            diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                        end
+                        diams = [diams diam];
+                        
+                        data = [data perc_MB(i, :), perc_NB(i, :)];
+                        group_MB = repmat(["MBs"], 1, length(perc_MB(i, :)));
+                        group_NB = repmat(["NBs"], 1, length(perc_NB(i, :)));
+                        bubble_type = [bubble_type, group_MB, group_NB];
+                        group_diameter = repmat([diam], 1, length(perc_MB(i, :))+length(perc_NB(i, :)));
+                        diameter = [diameter, group_diameter];
+                    end
+
+                    % Perform ANOVA
+                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
+                    % Perform post-hoc tests (Tukey's honestly significant difference)
+                    [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+
+                    tbl = array2table(c,"VariableNames", ...
+                    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                    tbl.("Group A")=gnames(tbl.("Group A"));
+                    tbl.("Group B")=gnames(tbl.("Group B"));
+                    
+                    idx_keep = [];
+                    p_MB_NB = [];
+                    for row=1:height(tbl)
+                        if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                            idx_keep = [idx_keep, row];
+                            if strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+                            end
+                        end
+                    end
+                    tbl =  tbl(idx_keep, :);
+
+                    for j = 1:numel(ths)-1
+                        maxy = max(mean(perc_MB(j,:),2,'omitnan'), mean(perc_NB(j,:),2,'omitnan'));
+                        text(x_coords(j), maxy*1.08, sigstars(p_MB_NB(j)));
+                    end
+
                 case 1
                     subplot(2,2,2)
                     bar(100*perc_MB./max(perc_MB,[],1),0.5);
