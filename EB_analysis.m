@@ -159,11 +159,16 @@ classdef EB_analysis
             new_obj.segment_tbl.opening = ...
                 zeros(height(new_obj.segment_tbl),1);
             ths = [0,ths];
+%             for i = 1:length(ths)-1
+%                 new_obj.segment_tbl.opening(...
+%                     new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+%                     new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+%                     ~control_idx &...
+%                     new_obj.segment_tbl.median_red >= treat_th(i)) = 1;
             for i = 1:length(ths)-1
                 new_obj.segment_tbl.opening(...
                     new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
                     new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
-                    ~control_idx &...
                     new_obj.segment_tbl.median_red >= treat_th(i)) = 1;
             end
         end
@@ -271,18 +276,16 @@ classdef EB_analysis
                 obj.segment_tbl.label);
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(control_idx),...
-                obj.segment_tbl.median_red(control_idx), 'color', '#8c1515');
-%                             'c','#8c1515'
+                obj.segment_tbl.median_red(control_idx), 'MarkerEdgeColor', '#8c1515');
             hold on;
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(MB_idx),...
-                obj.segment_tbl.median_red(MB_idx), 'color', '#09425A');
+                obj.segment_tbl.median_red(MB_idx), 'MarkerEdgeColor', '#09425A');
             
             hold on;
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(NB_idx),...
-                obj.segment_tbl.median_red(NB_idx), 'color', '#EDB120');
-%                 'c','#09425A');
+                obj.segment_tbl.median_red(NB_idx), 'MarkerEdgeColor', '#77AC30');
             legend('control','MB + FUS', 'NB + FUS');
             title(sprintf('[%d,%d] px',...
                 obj.from_px,obj.from_px+obj.n_px));
@@ -327,7 +330,7 @@ classdef EB_analysis
             control_red_std = cellfun(@(x) std(x),control_groups);
             errorbar(control_red,control_red_std,'Color','#8c1515');...
                 hold on; errorbar(MB_red,MB_red_std,'Color','#09425A');...
-                hold on; errorbar(NB_red,NB_red_std,'Color','#EDB120')
+                hold on; errorbar(NB_red,NB_red_std,'Color','#77AC30')
             if nargin > 2
                 if isa(fitType,'char')  % if user specified a single fitType object for both groups
                     tmp = fitType;
@@ -369,7 +372,7 @@ classdef EB_analysis
                 h= get(gca, 'Children');
                 set(h(2),'Color','#8c1515', 'LineStyle','--');
                 set(h(1),'Color','#09425A', 'LineStyle','--');
-                set(h(3),'Color','#EDB120', 'LineStyle','--');
+                set(h(3),'Color','#77AC30', 'LineStyle','--');
                 legend('control','MB', 'NB',...
                     strrep(fitstr(f1,gof1),'y','y(control)'),...
                     strrep(fitstr(f2,gof2),'y','y(MB+FUS)'),...
@@ -522,7 +525,7 @@ classdef EB_analysis
                     end
                     xticks([1:numel(MB_groups)]);
                     xticklabels(generate_xticks(ths));
-                    xlabel('Diameter [um]');
+                    xlabel('Diameter [\mum]');
                     hold off;
                     ylabel('Median red intensity in perivscular area [A.U.]');
                     ax = gca;
@@ -646,7 +649,7 @@ classdef EB_analysis
 
                 case 5  % only NB
                     bar(1:2:(length(ths)*2),NB_mu_median(1,:),0.5,...
-                        'FaceColor','#EDB120');
+                        'FaceColor','#77AC30');
                     hold on;
                     errorbar(1:2:(length(ths)*2),NB_mu_median(1,:),...
                         NB_mu_median(2,:),NB_mu_median(2,:),...
@@ -728,7 +731,7 @@ classdef EB_analysis
                             'FaceColor','#8c1515');
                         hold on;
                         b2 =bar(1.25,NB_mu_median(1,:),0.25,...
-                            'FaceColor','#EDB120');
+                            'FaceColor','#77AC30');
                         errorbar(0.75,control_mu_median(1,:),...
                             control_mu_median(2,:),control_mu_median(2,:),...
                             'k', 'LineStyle','none');
@@ -749,7 +752,7 @@ classdef EB_analysis
                         hold on;
                         b2 =bar(1.25:2:(length(ths)*2),...
                             NB_mu_median(1,:),0.25,...
-                            'FaceColor','#EDB120');
+                            'FaceColor','#77AC30');
                         errorbar(0.75:2:(length(ths)*2),control_mu_median(1,:),...
                             control_mu_median(2,:),control_mu_median(2,:),'k',...
                             'LineStyle','none');
@@ -782,7 +785,7 @@ classdef EB_analysis
                             'FaceColor','#09425A');
                         hold on;
                         b3 =bar(1.75,NB_mu_median(1,:),0.25,...
-                            'FaceColor','#EDB120');
+                            'FaceColor','#77AC30');
                         errorbar(0.75,control_mu_median(1,:),...
                             control_mu_median(2,:),control_mu_median(2,:),...
                             'k', 'LineStyle','none');
@@ -805,7 +808,7 @@ classdef EB_analysis
                         hold on;
                         b3 =bar(1.75:2:(length(ths)*2),...
                             NB_mu_median(1,:),0.25,...
-                            'FaceColor','#EDB120');
+                            'FaceColor','#77AC30');
                         errorbar(0.75:2:(length(ths)*2),control_mu_median(1,:),...
                             control_mu_median(2,:),control_mu_median(2,:),'k',...
                             'LineStyle','none');
@@ -893,7 +896,7 @@ classdef EB_analysis
                             pos = NB_poses(i);
                             NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
                             ymax = max([ymax, NB_y_pos + 0.05]);
-                            text(pos,NB_y_pos,st_NB, 'Color', '#EDB120', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                            text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
                         end
                     end
 
@@ -919,7 +922,7 @@ classdef EB_analysis
                 case 3  % diffrence NB-control
                     bar(0.75:2:((length(ths)-1)*2+0.75),...
                     NB_mu_median(1,:)-control_mu_median(1,:),0.25,...
-                    'FaceColor','#EDB120');
+                    'FaceColor','#77AC30');
                     xticks(1:2:(length(ths)*2+1));
                     xticklabels(generate_xticks(ths));
                     title({'NBs treatment-control',...
@@ -934,7 +937,7 @@ classdef EB_analysis
                     hold on;
                     b2 = bar(1.25:2:(length(ths)*2+0.75),...
                         NB_mu_median(1,:)-control_mu_median(1,:),0.25,...
-                        'FaceColor','#EDB120');
+                        'FaceColor','#77AC30');
                     xticks(1:2:(length(ths)*2+1));
                     xticklabels(generate_xticks(ths));
                     title({'MBs/NBs treatment-control',...
@@ -991,7 +994,7 @@ classdef EB_analysis
                 ths = 2:10;
             end
             if nargin < 2
-                numstd = 2;
+                numstd = 1;
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
@@ -1038,7 +1041,7 @@ classdef EB_analysis
                         a2 = histogram(cur_MBs,100,'FaceColor','#09425A',...
                             'Normalization','probability');
                         hold on;
-                        a3 = histogram(cur_NBs,100,'FaceColor','#EDB120',...
+                        a3 = histogram(cur_NBs,100,'FaceColor','#77AC30',...
                             'Normalization','probability');
                     else
                         [control_density, control_vals] =...
@@ -1059,7 +1062,7 @@ classdef EB_analysis
                         hold on;
                         a3 = area(NB_vals,...
                             100*NB_density./sum(NB_density),...
-                            'FaceColor','#EDB120');
+                            'FaceColor','#77AC30');
                         a3.FaceAlpha = 0.5;
                         [max_control,max_control_idx] =...
                             max(100*control_density./sum(control_density));
@@ -1074,12 +1077,12 @@ classdef EB_analysis
                         all_label = ones(size(all_measurements));
                         all_label(1:length(cur_controls)) = 0;
                         p = anovan(all_measurements,all_label,'display','off');
-                        text(...
-                            mean([control_vals(max_control_idx),MB_vals(max_MB_idx), NB_vals(max_NB_idx)]),...
-                            0.15 + max([max_control,max_MB, max_NB]),...
-                            sigstars(p),...
-                           'FontSize',12,...
-                           'HorizontalAlignment','center');
+%                         text(...
+%                             mean([control_vals(max_control_idx),MB_vals(max_MB_idx), NB_vals(max_NB_idx)]),...
+%                             0.15 + max([max_control,max_MB, max_NB]),...
+%                             sigstars(p),...
+%                            'FontSize',12,...
+%                            'HorizontalAlignment','center');
                     end
                     xlabel('EB intensity [A.U.]');
                     ylabel('# Vessels [%]');
@@ -1117,7 +1120,7 @@ classdef EB_analysis
                 'FaceColor','#09425A');
             hold on;
             histogram(NB_diams,0.5:1:25.5,'Normalization','probability',...
-                'FaceColor','#EDB120');
+                'FaceColor','#77AC30');
             legend(['Control-',num2str(numel(control_diams)),' total segments']...
                 ,['MBs Treatment-',num2str(numel(MB_diams)),' total segments']...
                 ,['NBs Treatment-',num2str(numel(NB_diams)),' total segments']);
@@ -1151,18 +1154,24 @@ classdef EB_analysis
             end
             intrabrain = P.Results.Intrabrain;
             
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
             MB_idx = cellfun(@(x) strcmp(x,'MB'),...
                 obj.segment_tbl.label);
             NB_idx = cellfun(@(x) strcmp(x,'NB'),...
                 obj.segment_tbl.label);
+            control_frames = unique(obj.segment_tbl.image_name(control_idx));
             MB_frames = unique(obj.segment_tbl.image_name(MB_idx));
             NB_frames = unique(obj.segment_tbl.image_name(NB_idx));
             ths = [0, ths];
             len_diam_groups = length(ths)-1;
+            n_control_animals = numel(control_frames);
             n_MB_animals = numel(MB_frames);
             n_NB_animals = numel(NB_frames);
+            perc_control = zeros(len_diam_groups,n_control_animals);
             perc_MB = zeros(len_diam_groups,n_MB_animals);
             perc_NB = zeros(len_diam_groups,n_NB_animals);
+            vessel_count_per_brain_control = perc_control;
             vessel_count_per_brain_MB = perc_MB;
             vessel_count_per_brain_NB = perc_NB;
             for i = 1:len_diam_groups
@@ -1184,20 +1193,35 @@ classdef EB_analysis
                     open_temp = in_group_NB & obj.segment_tbl.opening;
                     perc_NB(i,k) = 100*(sum(open_temp)/sum(in_group_NB));
                 end
+                for p = 1:n_control_animals
+                    in_group_control = ...
+                        obj.segment_tbl.median_segment_diam_um >= ths(i) &...
+                        obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
+                        strcmp(obj.segment_tbl.image_name,control_frames(p));
+                    vessel_count_per_brain_control(i,p) = sum(in_group_control);
+                    open_temp = in_group_control & obj.segment_tbl.opening;
+                    perc_control(i,p) = 100*(sum(open_temp)/sum(in_group_control));
+                end
             end
             switch intrabrain
                 case 0
                     % Preform whole group analysis
-                    b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_MB,2,'omitnan'),0.25,'FaceColor','#09425A');
+                    b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_control,2,'omitnan'),0.25,'FaceColor','#8c1515');
                     hold on;
-                    b2 = bar(1.25:2:((length(ths)-1)*2), mean(perc_NB,2,'omitnan'),0.25,'FaceColor','#EDB120');
+                    b2 = bar(1.25:2:((length(ths)-1)*2), mean(perc_MB,2,'omitnan'),0.25,'FaceColor','#09425A');
+                    hold on;
+                    b3 = bar(1.75:2:((length(ths)-1)*2), mean(perc_NB,2,'omitnan'),0.25,'FaceColor','#77AC30');
                     if strcmp(P.Results.Errorbars,'on')
                         hold on;
-                        errorbar(0.75:2:((length(ths)-1)*2),mean(perc_MB,2,'omitnan'),...
+                        errorbar(0.75:2:((length(ths)-1)*2),mean(perc_control,2,'omitnan'),...
+                                    [],std(perc_control,0,2,'omitnan'),'k',...
+                                    'LineStyle','none');
+                        hold on;
+                        errorbar(1.25:2:((length(ths)-1)*2),mean(perc_MB,2,'omitnan'),...
                                     [],std(perc_MB,0,2,'omitnan'),'k',...
                                     'LineStyle','none');
                         hold on;
-                        errorbar(1.25:2:((length(ths)-1)*2),mean(perc_NB,2,'omitnan'),...
+                        errorbar(1.75:2:((length(ths)-1)*2),mean(perc_NB,2,'omitnan'),...
                             [],std(perc_NB,0,2,'omitnan'),'k',...
                             'LineStyle','none');
                     end
@@ -1218,18 +1242,20 @@ classdef EB_analysis
                         end
                         diams = [diams diam];
                         
-                        data = [data perc_MB(i, :), perc_NB(i, :)];
+                        data = [data, perc_control(i, :), perc_MB(i, :), perc_NB(i, :)];
+                        group_control = repmat(["Control"], 1, length(perc_control(i, :)));
                         group_MB = repmat(["MBs"], 1, length(perc_MB(i, :)));
                         group_NB = repmat(["NBs"], 1, length(perc_NB(i, :)));
-                        bubble_type = [bubble_type, group_MB, group_NB];
-                        group_diameter = repmat([diam], 1, length(perc_MB(i, :))+length(perc_NB(i, :)));
+                        bubble_type = [bubble_type, group_control ,group_MB, group_NB];
+                        group_diameter = repmat([diam], 1, length(perc_control(i, :))+length(perc_MB(i, :))+length(perc_NB(i, :)));
                         diameter = [diameter, group_diameter];
                     end
 
                     % Perform ANOVA
-                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
+                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'}, 'Display','off');
                     % Perform post-hoc tests (Tukey's honestly significant difference)
-                    [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+%                     [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+                    [c, ~, ~, gnames] = multcompare(stats, 'Display','off', 'Dimension', [1, 2]);
 
                     tbl = array2table(c,"VariableNames", ...
                     ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
@@ -1237,21 +1263,47 @@ classdef EB_analysis
                     tbl.("Group B")=gnames(tbl.("Group B"));
                     
                     idx_keep = [];
+                    p_control_MB = [];
+                    p_control_NB = [];
                     p_MB_NB = [];
                     for row=1:height(tbl)
                         if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
                             idx_keep = [idx_keep, row];
-                            if strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+                            if strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'M')
+                                p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+                            elseif strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+                            elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
                                 p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
                             end
                         end
                     end
                     tbl =  tbl(idx_keep, :);
+                    
+                    ymax=0;
+                    for i = 1:numel(ths)-1
+                        st_MB = sigstars(p_control_MB(i));
+                        st_NB = sigstars(p_control_NB(i));
+                        st = sigstars(p_MB_NB(i));
+                        
+                        MB_y_pos = mean(perc_MB(i,:),2,'omitnan') + std(perc_MB(i,:),0,2,'omitnan') + 2;
+                        ymax = max([ymax, MB_y_pos + 0.05]);
+                        if ~strcmp(st_MB, 'ns')
+                            MB_poses = 1.25:2:((length(ths)-1)*2);
+                            pos = MB_poses(i);
+                            text(pos, MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                        end
+                        
+                        NB_y_pos = mean(perc_NB(i,:),2,'omitnan') + std(perc_NB(i,:),0,2,'omitnan') + 2;
+                        ymax = max([ymax, NB_y_pos + 0.05]);
+                        if ~strcmp(st_NB, 'ns')
+                            NB_poses = 1.75:2:((length(ths)-1)*2);
+                            pos = NB_poses(i);
+                            text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                        end
 
-                    for j = 1:numel(ths)-1
-                        maxy = max(mean(perc_MB(j,:),2,'omitnan'), mean(perc_NB(j,:),2,'omitnan'));
-                        text(x_coords(j), maxy*1.08, sigstars(p_MB_NB(j)));
                     end
+
 
                 case 1
                     subplot(2,2,2)
@@ -1287,7 +1339,8 @@ classdef EB_analysis
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened Vessel Fraction as Function of Vessel Diameter');
-            legend([b1, b2], 'MB', 'NB')
+            legend([b1, b2, b3], 'Control', 'MB', 'NB')
+            ylim([0 ymax+2])
             
             perc_tbl_MB = array2table(perc_MB,'VariableNames',MB_frames,...
                 'RowNames',generate_xticks(ths(2:end)));
