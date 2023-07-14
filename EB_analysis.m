@@ -16,46 +16,120 @@ classdef EB_analysis
             %   NB_file = NB "EB_analysis_entire_folder" file
             %   um_px = ratio of microns to pixel (default = 0.29288)
             P = inputParser();
-            P.addOptional('control_file',[],@(x) isfile(x));
-            P.addOptional('MB_file',[],@(x) isfile(x));
-            P.addOptional('NB_file',[],@(x) isfile(x));
-            P.addOptional('um_px',0.29288,@(x) isnumeric(x));
-            P.parse(varargin{:});
-            control_file = P.Results.control_file;
-            MB_file = P.Results.MB_file;
-            NB_file = P.Results.NB_file;
-            obj.UM_PX = P.Results.um_px;
-            if isempty(control_file)
-                [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
-                control_file = fullfile(folder1,file1);
+            num_groups = input("How many groups to analyze? (2/3)\n");
+            
+            switch num_groups
+                case 3
+                    P.addOptional('control_file',[],@(x) isfile(x));
+                    P.addOptional('MB_file',[],@(x) isfile(x));
+                    P.addOptional('NB_file',[],@(x) isfile(x));
+                    P.addOptional('um_px',0.29288,@(x) isnumeric(x));
+                    P.parse(varargin{:});
+                    control_file = P.Results.control_file;
+                    MB_file = P.Results.MB_file;
+                    NB_file = P.Results.NB_file;
+                    obj.UM_PX = P.Results.um_px;
+                    if isempty(control_file)
+                        [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
+                        control_file = fullfile(folder1,file1);
+                    end
+                    control = load(control_file);
+                    if isempty(MB_file)
+                        [file2,folder2] = uigetfile('*.mat','Choose MBs treatment analysis file');
+                        MB_file = fullfile(folder2,file2);
+                    end
+                    MB = load(MB_file);
+                    if isempty(NB_file)
+                        [file3,folder3] = uigetfile('*.mat','Choose NBs treatment analysis file');
+                        NB_file = fullfile(folder3,file3);
+                    end
+                    NB = load(NB_file);
+                    control_tbl = unpack_table(control.res.table);
+                    label = cell(height(control_tbl),1);
+                    label(:) = {'control'};
+                    control_tbl.label = label;
+                    MB_tbl = unpack_table(MB.res.table);
+                    label = cell(height(MB_tbl),1);
+                    label(:) = {'MB'};
+                    MB_tbl.label = label;
+                    NB_tbl = unpack_table(NB.res.table);
+                    label = cell(height(NB_tbl),1);
+                    label(:) = {'NB'};
+                    NB_tbl.label = label;
+                    obj.segment_tbl = vertcat(control_tbl,MB_tbl,NB_tbl);
+                    obj.n_px = control.res.n_px;
+                    obj.from_px = control.res.from_px;
+                    obj = obj.classify_opening;
+
+                case 2
+                    treatment_group = input("What is the treatment group?\n" + ...
+                        "for MB press 1\n" + ...
+                        "for NB press 2\n");
+
+                    switch treatment_group
+                        case 1
+                            P.addOptional('control_file',[],@(x) isfile(x));
+                            P.addOptional('MB_file',[],@(x) isfile(x));
+                            P.addOptional('um_px',0.29288,@(x) isnumeric(x));
+                            P.parse(varargin{:});
+                            control_file = P.Results.control_file;
+                            MB_file = P.Results.MB_file;
+                            obj.UM_PX = P.Results.um_px;
+                            if isempty(control_file)
+                                [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
+                                control_file = fullfile(folder1,file1);
+                            end
+                            control = load(control_file);
+                            if isempty(MB_file)
+                                [file2,folder2] = uigetfile('*.mat','Choose MBs treatment analysis file');
+                                MB_file = fullfile(folder2,file2);
+                            end
+                            MB = load(MB_file);
+                            control_tbl = unpack_table(control.res.table);
+                            label = cell(height(control_tbl),1);
+                            label(:) = {'control'};
+                            control_tbl.label = label;
+                            MB_tbl = unpack_table(MB.res.table);
+                            label = cell(height(MB_tbl),1);
+                            label(:) = {'MB'};
+                            MB_tbl.label = label;
+                            obj.segment_tbl = vertcat(control_tbl,MB_tbl);
+                            obj.n_px = control.res.n_px;
+                            obj.from_px = control.res.from_px;
+                            obj = obj.classify_opening;
+
+                        case 2
+                            P.addOptional('control_file',[],@(x) isfile(x));
+                            P.addOptional('NB_file',[],@(x) isfile(x));
+                            P.addOptional('um_px',0.29288,@(x) isnumeric(x));
+                            P.parse(varargin{:});
+                            control_file = P.Results.control_file;
+                            NB_file = P.Results.NB_file;
+                            obj.UM_PX = P.Results.um_px;
+                            if isempty(control_file)
+                                [file1,folder1] = uigetfile('*.mat','Choose control analysis file');
+                                control_file = fullfile(folder1,file1);
+                            end
+                            control = load(control_file);
+                            if isempty(NB_file)
+                                [file2,folder2] = uigetfile('*.mat','Choose NBs treatment analysis file');
+                                NB_file = fullfile(folder2,file2);
+                            end
+                            NB = load(NB_file);
+                            control_tbl = unpack_table(control.res.table);
+                            label = cell(height(control_tbl),1);
+                            label(:) = {'control'};
+                            control_tbl.label = label;
+                            NB_tbl = unpack_table(NB.res.table);
+                            label = cell(height(NB_tbl),1);
+                            label(:) = {'NB'};
+                            NB_tbl.label = label;
+                            obj.segment_tbl = vertcat(control_tbl,NB_tbl);
+                            obj.n_px = control.res.n_px;
+                            obj.from_px = control.res.from_px;
+                            obj = obj.classify_opening;
+                    end
             end
-            control = load(control_file);
-            if isempty(MB_file)
-                [file2,folder2] = uigetfile('*.mat','Choose MBs treatment analysis file');
-                MB_file = fullfile(folder2,file2);
-            end
-            MB = load(MB_file);
-            if isempty(NB_file)
-                [file3,folder3] = uigetfile('*.mat','Choose NBs treatment analysis file');
-                NB_file = fullfile(folder3,file3);
-            end
-            NB = load(NB_file);
-            control_tbl = unpack_table(control.res.table);
-            label = cell(height(control_tbl),1);
-            label(:) = {'control'};
-            control_tbl.label = label;
-            MB_tbl = unpack_table(MB.res.table);
-            label = cell(height(MB_tbl),1);
-            label(:) = {'MB'};
-            MB_tbl.label = label;
-            NB_tbl = unpack_table(NB.res.table);
-            label = cell(height(NB_tbl),1);
-            label(:) = {'NB'};
-            NB_tbl.label = label;
-            obj.segment_tbl = vertcat(control_tbl,MB_tbl,NB_tbl);
-            obj.n_px = control.res.n_px;
-            obj.from_px = control.res.from_px;
-            obj = obj.classify_opening;
         end
         function [new_obj_sub, new_obj_exc]  = subarea(obj,area_name)
             % Create new object with only sub area of the brain specified
@@ -159,12 +233,6 @@ classdef EB_analysis
             new_obj.segment_tbl.opening = ...
                 zeros(height(new_obj.segment_tbl),1);
             ths = [0,ths];
-%             for i = 1:length(ths)-1
-%                 new_obj.segment_tbl.opening(...
-%                     new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
-%                     new_obj.segment_tbl.median_segment_diam_um < ths(i+1) &...
-%                     ~control_idx &...
-%                     new_obj.segment_tbl.median_red >= treat_th(i)) = 1;
             for i = 1:length(ths)-1
                 new_obj.segment_tbl.opening(...
                     new_obj.segment_tbl.median_segment_diam_um >= ths(i) &...
@@ -268,6 +336,7 @@ classdef EB_analysis
         function scatterPlot(obj)
             % Simple scatter plot of all the vessel segments as 2D points 
             % in the diameter-extravasation plane
+            exp_groups = unique(obj.segment_tbl.("label"));
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             MB_idx = cellfun(@(x) strcmp(x,'MB'),...
@@ -286,7 +355,15 @@ classdef EB_analysis
             scatter(...
                 obj.segment_tbl.median_segment_diam_um(NB_idx),...
                 obj.segment_tbl.median_red(NB_idx), 'MarkerEdgeColor', '#77AC30');
-            legend('control','MB + FUS', 'NB + FUS');
+            if length(exp_groups) == 3
+                legend('control','MB + FUS', 'NB + FUS');
+            else
+                if ismember('MB', exp_groups)
+                    legend('control','MB + FUS');
+                elseif ismember('NB', exp_groups)
+                    legend('control','NB + FUS');
+                end
+            end
             title(sprintf('[%d,%d] px',...
                 obj.from_px,obj.from_px+obj.n_px));
             xlabel('median segment diameter [um]'); 
@@ -310,6 +387,7 @@ classdef EB_analysis
             if nargin < 2
                 ths = 2:10;
             end
+            exp_groups = unique(obj.segment_tbl.("label"));
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             MB_idx = cellfun(@(x) strcmp(x,'MB'),...
@@ -373,12 +451,33 @@ classdef EB_analysis
                 set(h(2),'Color','#8c1515', 'LineStyle','--');
                 set(h(1),'Color','#09425A', 'LineStyle','--');
                 set(h(3),'Color','#77AC30', 'LineStyle','--');
-                legend('control','MB', 'NB',...
+
+                if length(exp_groups) == 3
+                    legend('control','MB', 'NB',...
                     strrep(fitstr(f1,gof1),'y','y(control)'),...
                     strrep(fitstr(f2,gof2),'y','y(MB+FUS)'),...
                     strrep(fitstr(f3,gof3),'y','y(NB+FUS)'));
+                else
+                    if ismember('MB', exp_groups)
+                        legend('control','MB', 'NB',...
+                        strrep(fitstr(f1,gof1),'y','y(control)'),...
+                        strrep(fitstr(f2,gof2),'y','y(MB+FUS)'));
+                    elseif ismember('NB', exp_groups)
+                    legend('control','MB', 'NB',...
+                    strrep(fitstr(f1,gof1),'y','y(control)'),...
+                    strrep(fitstr(f3,gof3),'y','y(NB+FUS)'));
+                    end
+                end
             else
-                legend('control','MB + FUS', 'NB + FUS');
+                if length(exp_groups) == 3
+                    legend('control','MB + FUS', 'NB + FUS');
+                else
+                    if ismember('MB', exp_groups)
+                        legend('control','MB + FUS', '');
+                    elseif ismember('NB', exp_groups)
+                        legend('control','', 'NB + FUS');
+                    end
+                end
             end
             xlabel('median segment diameter [\mum]'); 
             ylabel('Median red pixel intensity [A.U.]');
@@ -390,14 +489,14 @@ classdef EB_analysis
             %       vessels with diameter larger than ths(end) will not be
             %       presented. if ths not specified a single violin will be
             %       plotted for all vessel diameters
-            %   groups - switch with 3 options for plotting, if not specified, default = 0:
+            %   groups - switch with 3 options for plotting, if not specified:
             %       0 = control + MB
             %       1 = control + NB
             %       2 = MB + NB
             %   varargin - input arguements of the varargin function by
             %       B. Bechtold
             %       (https://github.com/bastibe/Violinplot-Matlab)
-            
+            exp_groups = unique(obj.segment_tbl.("label"));
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
             MB_idx = cellfun(@(x) strcmp(x,'MB'),...
@@ -405,25 +504,51 @@ classdef EB_analysis
             NB_idx = cellfun(@(x) strcmp(x,'NB'),...
                 obj.segment_tbl.label);
             figure;
-            if nargin < 2   % No diameter thresholds specified
-                control_groups = ...
-                    obj.segment_tbl.median_red(control_idx);
-                MB_groups = ...
-                    obj.segment_tbl.median_red(MB_idx);
-                control_groups = rmoutliers(control_groups);
-                MB_groups = rmoutliers(MB_groups);
-                Violin({control_groups},1,...
-                    'HalfViolin','left','ViolinColor',{[1,0,0]},...
-                    varargin{:});
-                hold on;
-                Violin({MB_groups},1,...
-                    'HalfViolin','right','ViolinColor',{[0,0,1]},...
-                    varargin{:});
-                xticks([]);
-                hold off;
+            if nargin < 2  % No diameter thresholds specified
+                if length(exp_groups) == 2 && ismember('NB', exp_groups)
+                    control_groups = ...
+                        obj.segment_tbl.median_red(control_idx);
+                    NB_groups = ...
+                        obj.segment_tbl.median_red(NB_idx);
+                    control_groups = rmoutliers(control_groups);
+                    NB_groups = rmoutliers(NB_groups);
+                    Violin({control_groups},1,...
+                        'HalfViolin','left','ViolinColor',{[1,0,0]},...
+                        varargin{:});
+                    hold on;
+                    Violin({NB_groups},1,...
+                        'HalfViolin','right','ViolinColor',{[0,1,0]},...
+                        varargin{:});
+                    xticks([]);
+                    hold off;
+                else
+                    control_groups = ...
+                        obj.segment_tbl.median_red(control_idx);
+                    MB_groups = ...
+                        obj.segment_tbl.median_red(MB_idx);
+                    control_groups = rmoutliers(control_groups);
+                    MB_groups = rmoutliers(MB_groups);
+                    Violin({control_groups},1,...
+                        'HalfViolin','left','ViolinColor',{[1,0,0]},...
+                        varargin{:});
+                    hold on;
+                    Violin({MB_groups},1,...
+                        'HalfViolin','right','ViolinColor',{[0,0,1]},...
+                        varargin{:});
+                    xticks([]);
+                    hold off;
+                end
             else
                 if nargin < 3
-                    groups = 0;
+                    if length(exp_groups) == 3
+                        groups = 2;
+                    else
+                        if ismember('MB', exp_groups)
+                            groups = 0;
+                        elseif ismember('NB', exp_groups)
+                            groups = 1;
+                        end
+                    end
                 end
                 switch groups
                     case 0
@@ -569,8 +694,18 @@ classdef EB_analysis
             %       -1 = plot only the control group and calculate statistical
             %           significance bewteen each diameter and the smallest
             %           diameter
+            exp_groups = unique(obj.segment_tbl.("label"));
+            ymax = 0;
             if nargin < 3
-                groups = 2;
+                if length(exp_groups) == 3
+                        groups = 7;
+                    else
+                        if ismember('MB', exp_groups)
+                            groups = 2;
+                        elseif ismember('NB', exp_groups)
+                            groups = 6;
+                        end
+                end
             end
             
             control_idx = cellfun(@(x) strcmp(x,'control'),...
@@ -673,7 +808,7 @@ classdef EB_analysis
                        end
                     end
 
-                case 2  % both groups (MB + control)
+                case 2  % MB + control
                     if length(ths) == 1
                         b1 = bar(0.75,control_mu_median(1,:),0.25,...
                             'FaceColor','#8c1515');
@@ -725,7 +860,7 @@ classdef EB_analysis
                     ylabel('Median red intensity in perivascular area [A.U.]')
 
 
-                case 6  % both groups (NB + control)
+                case 6  % NB + control
                     if length(ths) == 1
                         b1 = bar(0.75,control_mu_median(1,:),0.25,...
                             'FaceColor','#8c1515');
@@ -796,7 +931,7 @@ classdef EB_analysis
                             NB_mu_median(2,:),NB_mu_median(2,:),'k',...
                             'LineStyle','none');
                         xticks([]);
-
+                        ylim = 0;
                     else
                         b1 = bar(0.75:2:(length(ths)*2),...
                             control_mu_median(1,:),0.25,...
@@ -848,65 +983,113 @@ classdef EB_analysis
                             group_diameter = repmat([diam], 1, length(control_groups{i})+length(MB_groups{i})+length(NB_groups{i}));
                             diameter = [diameter, group_diameter];
                         end
-                    end
-                    % Perform ANOVA
-                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
-                    % Perform post-hoc tests (Tukey's honestly significant difference)
-                    [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
 
-                    tbl = array2table(c,"VariableNames", ...
-                    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
-                    tbl.("Group A")=gnames(tbl.("Group A"));
-                    tbl.("Group B")=gnames(tbl.("Group B"));
-                    
-                    idx_keep = [];
-                    p_control_MB = [];
-                    p_control_NB = [];
-                    p_MB_NB = [];
-                    for row=1:height(tbl)
-                        if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
-                            idx_keep = [idx_keep, row];
-                            if strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'M')
-                                p_control_MB = [p_control_MB, tbl.("P-value")(row)];
-                            elseif strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'N')
-                                p_control_NB = [p_control_NB, tbl.("P-value")(row)];
-                            elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
-                                p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+                        % Perform ANOVA
+                        [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
+                        % Perform post-hoc tests (Tukey's honestly significant difference)
+                        [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+    
+                        tbl = array2table(c,"VariableNames", ...
+                        ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                        tbl.("Group A")=gnames(tbl.("Group A"));
+                        tbl.("Group B")=gnames(tbl.("Group B"));
+                        
+                        idx_keep = [];
+                        p_control_MB = [];
+                        p_control_NB = [];
+                        p_MB_NB = [];
+                        for row=1:height(tbl)
+                            if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                                idx_keep = [idx_keep, row];
+                                if strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'M')
+                                    p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+                                elseif strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                    p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+                                elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                    p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+                                end
+                            end
+                        end
+                        tbl =  tbl(idx_keep, :);
+                        anova_results = array2table([diams.', p_control_MB.', p_control_NB.', p_MB_NB.'],"VariableNames", ...
+                            ["Vessels_Diameter","Control_MBs","Control_NBs","MBs_NBs"]);
+                        
+                        for i = 1:numel(ths)
+                            st_MB = sigstars(p_control_MB(i));
+                            st_NB = sigstars(p_control_NB(i));
+    
+                            if ~strcmp(st_MB,'ns')
+                                MB_poses = 1.25:2:(length(ths)*2);
+                                pos = MB_poses(i);
+                                MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
+                                ymax = max([ymax, MB_y_pos + 0.05]);
+                                text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                            end
+    
+                            if ~strcmp(st_NB,'ns')
+                                NB_poses = 1.75:2:(length(ths)*2);
+                                pos = NB_poses(i);
+                                NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
+                                ymax = max([ymax, NB_y_pos + 0.05]);
+                                text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
                             end
                         end
                     end
-                    tbl =  tbl(idx_keep, :);
-                    anova_results = array2table([diams.', p_control_MB.', p_control_NB.', p_MB_NB.'],"VariableNames", ...
-                        ["Vessels_Diameter","Control_MBs","Control_NBs","MBs_NBs"]);
-                    
-                    for i = 1:numel(ths)
-                        st_MB = sigstars(p_control_MB(i));
-                        st_NB = sigstars(p_control_NB(i));
-
-                        if ~strcmp(st_MB,'ns')
-                            MB_poses = 1.25:2:(length(ths)*2);
-                            pos = MB_poses(i);
-                            MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
-                            ymax = max([ymax, MB_y_pos + 0.05]);
-                            text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
-                        end
-
-                        if ~strcmp(st_NB,'ns')
-                            NB_poses = 1.75:2:(length(ths)*2);
-                            pos = NB_poses(i);
-                            NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
-                            ymax = max([ymax, NB_y_pos + 0.05]);
-                            text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
-                        end
-                    end
+%                     % Perform ANOVA
+%                     [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'});
+%                     % Perform post-hoc tests (Tukey's honestly significant difference)
+%                     [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+% 
+%                     tbl = array2table(c,"VariableNames", ...
+%                     ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+%                     tbl.("Group A")=gnames(tbl.("Group A"));
+%                     tbl.("Group B")=gnames(tbl.("Group B"));
+%                     
+%                     idx_keep = [];
+%                     p_control_MB = [];
+%                     p_control_NB = [];
+%                     p_MB_NB = [];
+%                     for row=1:height(tbl)
+%                         if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+%                             idx_keep = [idx_keep, row];
+%                             if strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'M')
+%                                 p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+%                             elseif strcmp(tbl.("Group A"){row}(13), 'c') && strcmp(tbl.("Group B"){row}(13), 'N')
+%                                 p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+%                             elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+%                                 p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+%                             end
+%                         end
+%                     end
+%                     tbl =  tbl(idx_keep, :);
+%                     anova_results = array2table([diams.', p_control_MB.', p_control_NB.', p_MB_NB.'],"VariableNames", ...
+%                         ["Vessels_Diameter","Control_MBs","Control_NBs","MBs_NBs"]);
+%                     
+%                     for i = 1:numel(ths)
+%                         st_MB = sigstars(p_control_MB(i));
+%                         st_NB = sigstars(p_control_NB(i));
+% 
+%                         if ~strcmp(st_MB,'ns')
+%                             MB_poses = 1.25:2:(length(ths)*2);
+%                             pos = MB_poses(i);
+%                             MB_y_pos = sum(MB_mu_median(1:2,i)) + 0.03;
+%                             ymax = max([ymax, MB_y_pos + 0.05]);
+%                             text(pos,MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+%                         end
+% 
+%                         if ~strcmp(st_NB,'ns')
+%                             NB_poses = 1.75:2:(length(ths)*2);
+%                             pos = NB_poses(i);
+%                             NB_y_pos = sum(NB_mu_median(1:2,i)) + 0.03;
+%                             ymax = max([ymax, NB_y_pos + 0.05]);
+%                             text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
+%                         end
+%                     end
 
                     legend([b1,b2, b3],'control','MB + FUS', 'NB + FUS');
-                    ylim([0, ymax]);
                     title('Median Red Intensity as Function of Vessel Diameter');
                     ylabel('Median red intensity in perivascular area [A.U.]');
                     
-                    % save the anova table results
-                    writetable(anova_results, 'anova_res.csv');
                 
                 case 0  % diffrence MB-control
                     bar(0.75:2:((length(ths)-1)*2+0.75),...
@@ -985,6 +1168,7 @@ classdef EB_analysis
             % Name-Value pair arguements:
             %   'Mode' (optional) - display mode, can either be 'histogram'
             %       (default) or 'pdf' which displys the kernel density
+            exp_groups = unique(obj.segment_tbl.("label"));
             P = inputParser();
             P.addParameter('Mode','histogram',...
                 @(x) sum(strcmp(x,{'histogram','pdf'}))==1);
@@ -994,7 +1178,7 @@ classdef EB_analysis
                 ths = 2:10;
             end
             if nargin < 2
-                numstd = 1;
+                numstd = 2;
             end
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
@@ -1033,65 +1217,82 @@ classdef EB_analysis
                     cur_MBs = MB_groups;
                     cur_NBs = NB_groups;
                 end
-                if ~isempty(cur_controls)
-                    if showmode
+                if showmode
+                    if ~isempty(cur_controls)
                         a1 = histogram(cur_controls,100,'FaceColor','#8c1515',...
                             'Normalization','probability');
+                    end
+                    if ~isempty(cur_MBs)
                         hold on;
                         a2 = histogram(cur_MBs,100,'FaceColor','#09425A',...
                             'Normalization','probability');
+                    end
+                    if ~isempty(cur_NBs)
                         hold on;
                         a3 = histogram(cur_NBs,100,'FaceColor','#77AC30',...
                             'Normalization','probability');
-                    else
-                        [control_density, control_vals] =...
-                            ksdensity(cur_controls);
+                    end
+                else
+                    [control_density, control_vals] =...
+                        ksdensity(cur_controls);
+                    a1 = area(control_vals, ...
+                        100*control_density./sum(control_density),...
+                        'FaceColor','#8c1515');
+                    [max_control,max_control_idx] =...
+                        max(100*control_density./sum(control_density));
+                    a1.FaceAlpha = 0.5;
+                    if ~isempty(cur_MBs)
                         [MB_density, MB_vals] =...
-                            ksdensity(cur_MBs);
-                        [NB_density, NB_vals] =...
-                            ksdensity(cur_NBs);
-                        a1 = area(control_vals,...
-                            100*control_density./sum(control_density),...
-                            'FaceColor','#8c1515');
-                        a1.FaceAlpha = 0.5;
+                                ksdensity(cur_MBs);
                         hold on;
                         a2 = area(MB_vals,...
                             100*MB_density./sum(MB_density),...
                             'FaceColor','#09425A');
                         a2.FaceAlpha = 0.5;
+                        [max_MB,max_MB_idx] =...
+                        max(100*MB_density./sum(MB_density));
+                    end
+                    if ~isempty(cur_NBs)
+                        [NB_density, NB_vals] =...
+                            ksdensity(cur_NBs);
                         hold on;
-                        a3 = area(NB_vals,...
-                            100*NB_density./sum(NB_density),...
+                        a3 = area(NB_vals, ...
+                            100*NB_density./sum(NB_density), ...
                             'FaceColor','#77AC30');
                         a3.FaceAlpha = 0.5;
-                        [max_control,max_control_idx] =...
-                            max(100*control_density./sum(control_density));
-                        [max_MB,max_MB_idx] =...
-                            max(100*MB_density./sum(MB_density));
                         [max_NB,max_NB_idx] =...
-                            max(100*NB_density./sum(NB_density));
-%                         plot([control_vals(max_control_idx),MB_vals(max_MB_idx),NB_vals(max_NB_idx)],...
-%                             (0.1 + max([max_control,max_MB, max_NB]))*ones(1,3),...
-%                             'Color',[0 0 0],'LineWidth',1);
-                        all_measurements = vertcat(cur_controls,cur_MBs, cur_NBs);
-                        all_label = ones(size(all_measurements));
-                        all_label(1:length(cur_controls)) = 0;
-                        p = anovan(all_measurements,all_label,'display','off');
-%                         text(...
-%                             mean([control_vals(max_control_idx),MB_vals(max_MB_idx), NB_vals(max_NB_idx)]),...
-%                             0.15 + max([max_control,max_MB, max_NB]),...
-%                             sigstars(p),...
-%                            'FontSize',12,...
-%                            'HorizontalAlignment','center');
+                        max(100*NB_density./sum(NB_density));
                     end
+                
                     xlabel('EB intensity [A.U.]');
                     ylabel('# Vessels [%]');
-                    legend([a1,a2, a3],{'control','MB + FUS', 'NB + FUS'});
+
+                    if length(exp_groups) == 3
+                        legend([a1,a2, a3],{'control','MB + FUS', 'NB + FUS'});
+                    else
+                        if ismember('MB', exp_groups)
+                            legend([a1,a2],{'control','MB + FUS'});
+                        elseif ismember('NB', exp_groups)
+                            legend([a1,a3],{'control','NB + FUS'});
+                        end
+                    end
+
                     if isnumeric(numstd) && ~isempty(numstd)
                        l1 = xline(mean(cur_controls)+numstd*std(cur_controls),...
                            'LineWidth',2,'LineStyle','--');
-                       legend([a1,a2, a3, l1],{'control','MB + FUS','NB + FUS',...
+
+                       if length(exp_groups) == 3
+                           legend([a1,a2, a3, l1],{'control','MB + FUS','NB + FUS',...
                            ['Control mean + ',num2str(numstd),' SDs']});
+                       else
+                           if ismember('MB', exp_groups)
+                               legend([a1, a2, l1],{'control','MB + FUS',...
+                           ['Control mean + ',num2str(numstd),' SDs']});
+                           elseif ismember('NB', exp_groups)
+                               legend([a1, a3, l1],{'control','NB + FUS',...
+                           ['Control mean + ',num2str(numstd),' SDs']});
+                           end
+                       end
                     end
                 end
                 xlim([0,1]);
@@ -1103,6 +1304,7 @@ classdef EB_analysis
             end
         end
         function diamHist(obj)
+            exp_groups = unique(obj.segment_tbl.("label"));
             % histogram of blood vessel diameter. 
             control_idx = cellfun(@(x) strcmp(x,'control'),...
                 obj.segment_tbl.label);
@@ -1121,9 +1323,24 @@ classdef EB_analysis
             hold on;
             histogram(NB_diams,0.5:1:25.5,'Normalization','probability',...
                 'FaceColor','#77AC30');
-            legend(['Control-',num2str(numel(control_diams)),' total segments']...
+
+            if length(exp_groups) == 3
+                legend(['Control-',num2str(numel(control_diams)),' total segments']...
                 ,['MBs Treatment-',num2str(numel(MB_diams)),' total segments']...
                 ,['NBs Treatment-',num2str(numel(NB_diams)),' total segments']);
+            else
+                if ismember('MB', exp_groups)
+                    legend(['Control-',num2str(numel(control_diams)),' total segments'], ...
+                        ['MBs Treatment-',num2str(numel(MB_diams)),' total segments'], ...
+                        '');
+                elseif ismember('NB', exp_groups)
+                    legend(['Control-',num2str(numel(control_diams)),' total segments'], ...
+                        '', ...
+                        ['NBs Treatment-',num2str(numel(NB_diams)),' total segments']);
+                end
+            end
+
+            
             xlabel('Vessel diameter [um]'); ylabel('% of total vessels');
             xticks(1:25)
             title('Blood vessel diameter histogram'); 
@@ -1132,6 +1349,17 @@ classdef EB_analysis
             ylabel('Diameter [um]');
         end
         function [perc_tbl_MB, perc_tbl_NB] = openedHist(obj,ths,varargin)
+            exp_groups = unique(obj.segment_tbl.("label"));
+            if length(exp_groups) == 3
+                groups = 0;
+            else
+                if ismember('MB', exp_groups)
+                    groups = 1;
+                elseif ismember('NB', exp_groups)
+                    groups = 2;
+                end
+            end
+
             % plot the histogram of fraction of opened vesseles by diameter
             % Inputs:
             %   ths - array of diameters to be used as diameter groups.
@@ -1203,107 +1431,246 @@ classdef EB_analysis
                     perc_control(i,p) = 100*(sum(open_temp)/sum(in_group_control));
                 end
             end
+
             switch intrabrain
                 case 0
                     % Preform whole group analysis
-                    b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_control,2,'omitnan'),0.25,'FaceColor','#8c1515');
-                    hold on;
-                    b2 = bar(1.25:2:((length(ths)-1)*2), mean(perc_MB,2,'omitnan'),0.25,'FaceColor','#09425A');
-                    hold on;
-                    b3 = bar(1.75:2:((length(ths)-1)*2), mean(perc_NB,2,'omitnan'),0.25,'FaceColor','#77AC30');
-                    if strcmp(P.Results.Errorbars,'on')
-                        hold on;
-                        errorbar(0.75:2:((length(ths)-1)*2),mean(perc_control,2,'omitnan'),...
-                                    [],std(perc_control,0,2,'omitnan'),'k',...
-                                    'LineStyle','none');
-                        hold on;
-                        errorbar(1.25:2:((length(ths)-1)*2),mean(perc_MB,2,'omitnan'),...
-                                    [],std(perc_MB,0,2,'omitnan'),'k',...
-                                    'LineStyle','none');
-                        hold on;
-                        errorbar(1.75:2:((length(ths)-1)*2),mean(perc_NB,2,'omitnan'),...
-                            [],std(perc_NB,0,2,'omitnan'),'k',...
-                            'LineStyle','none');
-                    end
-                    
-                    x_coords = 1:2:((length(ths)-1)*2);
-
-                     % Add significance stars of control vs MB vs NB of same diameter
-                    data = [];
-                    bubble_type = [];
-                    diameter = [];
-                    diams = [];
-                    for i = 1:numel(ths)-1
-                        % save results to table
-                        if i == numel(ths)
-                            diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
-                        else
-                            diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
-                        end
-                        diams = [diams diam];
-                        
-                        data = [data, perc_control(i, :), perc_MB(i, :), perc_NB(i, :)];
-                        group_control = repmat(["Control"], 1, length(perc_control(i, :)));
-                        group_MB = repmat(["MBs"], 1, length(perc_MB(i, :)));
-                        group_NB = repmat(["NBs"], 1, length(perc_NB(i, :)));
-                        bubble_type = [bubble_type, group_control ,group_MB, group_NB];
-                        group_diameter = repmat([diam], 1, length(perc_control(i, :))+length(perc_MB(i, :))+length(perc_NB(i, :)));
-                        diameter = [diameter, group_diameter];
-                    end
-
-                    % Perform ANOVA
-                    [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'}, 'Display','off');
-                    % Perform post-hoc tests (Tukey's honestly significant difference)
-%                     [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
-                    [c, ~, ~, gnames] = multcompare(stats, 'Display','off', 'Dimension', [1, 2]);
-
-                    tbl = array2table(c,"VariableNames", ...
-                    ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
-                    tbl.("Group A")=gnames(tbl.("Group A"));
-                    tbl.("Group B")=gnames(tbl.("Group B"));
-                    
-                    idx_keep = [];
-                    p_control_MB = [];
-                    p_control_NB = [];
-                    p_MB_NB = [];
-                    for row=1:height(tbl)
-                        if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
-                            idx_keep = [idx_keep, row];
-                            if strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'M')
-                                p_control_MB = [p_control_MB, tbl.("P-value")(row)];
-                            elseif strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'N')
-                                p_control_NB = [p_control_NB, tbl.("P-value")(row)];
-                            elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
-                                p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+                    switch groups
+                        case 0
+                            b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_control,2,'omitnan'),0.25,'FaceColor','#8c1515');
+                            hold on;
+                            b2 = bar(1.25:2:((length(ths)-1)*2), mean(perc_MB,2,'omitnan'),0.25,'FaceColor','#09425A');
+                            hold on;
+                            b3 = bar(1.75:2:((length(ths)-1)*2), mean(perc_NB,2,'omitnan'),0.25,'FaceColor','#77AC30');
+                            hold on;
+                            errorbar(0.75:2:((length(ths)-1)*2),mean(perc_control,2,'omitnan'),...
+                                        [],std(perc_control,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                            hold on;
+                            errorbar(1.25:2:((length(ths)-1)*2),mean(perc_MB,2,'omitnan'),...
+                                        [],std(perc_MB,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                            hold on;
+                            errorbar(1.75:2:((length(ths)-1)*2),mean(perc_NB,2,'omitnan'),...
+                                [],std(perc_NB,0,2,'omitnan'),'k',...
+                                'LineStyle','none');
+                                    
+                             % Add significance stars of control vs MB vs NB of same diameter
+                            data = [];
+                            bubble_type = [];
+                            diameter = [];
+                            diams = [];
+                            for i = 1:numel(ths)-1
+                                % save results to table
+                                if i == numel(ths)
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                else
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                end
+                                diams = [diams diam];
+                                
+                                data = [data, perc_control(i, :), perc_MB(i, :), perc_NB(i, :)];
+                                group_control = repmat(["Control"], 1, length(perc_control(i, :)));
+                                group_MB = repmat(["MBs"], 1, length(perc_MB(i, :)));
+                                group_NB = repmat(["NBs"], 1, length(perc_NB(i, :)));
+                                bubble_type = [bubble_type, group_control ,group_MB, group_NB];
+                                group_diameter = repmat([diam], 1, length(perc_control(i, :))+length(perc_MB(i, :))+length(perc_NB(i, :)));
+                                diameter = [diameter, group_diameter];
                             end
-                        end
-                    end
-                    tbl =  tbl(idx_keep, :);
-                    
-                    ymax=0;
-                    for i = 1:numel(ths)-1
-                        st_MB = sigstars(p_control_MB(i));
-                        st_NB = sigstars(p_control_NB(i));
-                        st = sigstars(p_MB_NB(i));
-                        
-                        MB_y_pos = mean(perc_MB(i,:),2,'omitnan') + std(perc_MB(i,:),0,2,'omitnan') + 2;
-                        ymax = max([ymax, MB_y_pos + 0.05]);
-                        if ~strcmp(st_MB, 'ns')
-                            MB_poses = 1.25:2:((length(ths)-1)*2);
-                            pos = MB_poses(i);
-                            text(pos, MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
-                        end
-                        
-                        NB_y_pos = mean(perc_NB(i,:),2,'omitnan') + std(perc_NB(i,:),0,2,'omitnan') + 2;
-                        ymax = max([ymax, NB_y_pos + 0.05]);
-                        if ~strcmp(st_NB, 'ns')
-                            NB_poses = 1.75:2:((length(ths)-1)*2);
-                            pos = NB_poses(i);
-                            text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
-                        end
+        
+                            % Perform ANOVA
+                            [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'}, 'Display','off');
+                            % Perform post-hoc tests (Tukey's honestly significant difference)
+        %                     [c, ~, ~, gnames] = multcompare(stats, 'CType', 'hsd', 'Display','off', 'Dimension', [1, 2]);
+                            [c, ~, ~, gnames] = multcompare(stats, 'Display','off', 'Dimension', [1, 2]);
+        
+                            tbl = array2table(c,"VariableNames", ...
+                            ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                            tbl.("Group A")=gnames(tbl.("Group A"));
+                            tbl.("Group B")=gnames(tbl.("Group B"));
+                            
+                            idx_keep = [];
+                            p_control_MB = [];
+                            p_control_NB = [];
+                            p_MB_NB = [];
+                            for row=1:height(tbl)
+                                if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                                    idx_keep = [idx_keep, row];
+                                    if strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'M')
+                                        p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+                                    elseif strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                        p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+                                    elseif strcmp(tbl.("Group A"){row}(13), 'M') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                        p_MB_NB = [p_MB_NB tbl.("P-value")(row)];
+                                    end
+                                end
+                            end
+                            tbl =  tbl(idx_keep, :);
+                            
+                            ymax=0;
+                            for i = 1:numel(ths)-1
+                                st_MB = sigstars(p_control_MB(i));
+                                st_NB = sigstars(p_control_NB(i));
+                                st = sigstars(p_MB_NB(i));
+                                
+                                MB_y_pos = mean(perc_MB(i,:),2,'omitnan') + std(perc_MB(i,:),0,2,'omitnan') + 2;
+                                ymax = max([ymax, MB_y_pos + 0.05]);
+                                if ~strcmp(st_MB, 'ns')
+                                    MB_poses = 1.25:2:((length(ths)-1)*2);
+                                    pos = MB_poses(i);
+                                    text(pos, MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                                end
+                                
+                                NB_y_pos = mean(perc_NB(i,:),2,'omitnan') + std(perc_NB(i,:),0,2,'omitnan') + 2;
+                                ymax = max([ymax, NB_y_pos + 0.05]);
+                                if ~strcmp(st_NB, 'ns')
+                                    NB_poses = 1.75:2:((length(ths)-1)*2);
+                                    pos = NB_poses(i);
+                                    text(pos,NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                                end
+        
+                            end
 
-                    end
+                        case 1
+                            b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_control,2,'omitnan'),0.25,'FaceColor','#8c1515');
+                            hold on;
+                            b2 = bar(1.25:2:((length(ths)-1)*2), mean(perc_MB,2,'omitnan'),0.25,'FaceColor','#09425A');
+                            hold on;
+                            errorbar(0.75:2:((length(ths)-1)*2),mean(perc_control,2,'omitnan'),...
+                                        [],std(perc_control,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                            hold on;
+                            errorbar(1.25:2:((length(ths)-1)*2),mean(perc_MB,2,'omitnan'),...
+                                        [],std(perc_MB,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                                    
+                             % Add significance stars of control vs MB vs NB of same diameter
+                            data = [];
+                            bubble_type = [];
+                            diameter = [];
+                            diams = [];
+                            for i = 1:numel(ths)-1
+                                % save results to table
+                                if i == numel(ths)
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                else
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                end
+                                diams = [diams diam];
+                                
+                                data = [data, perc_control(i, :), perc_MB(i, :)];
+                                group_control = repmat(["Control"], 1, length(perc_control(i, :)));
+                                group_MB = repmat(["MBs"], 1, length(perc_MB(i, :)));
+                                bubble_type = [bubble_type, group_control ,group_MB];
+                                group_diameter = repmat([diam], 1, length(perc_control(i, :))+length(perc_MB(i, :)));
+                                diameter = [diameter, group_diameter];
+                            end
+        
+                            % Perform ANOVA
+                            [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'}, 'Display','off');
+                            [c, ~, ~, gnames] = multcompare(stats, 'Display','off', 'Dimension', [1, 2]);
+        
+                            tbl = array2table(c,"VariableNames", ...
+                            ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                            tbl.("Group A")=gnames(tbl.("Group A"));
+                            tbl.("Group B")=gnames(tbl.("Group B"));
+                            
+                            idx_keep = [];
+                            p_control_MB = [];
+                            for row=1:height(tbl)
+                                if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                                    idx_keep = [idx_keep, row];
+                                    if strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'M')
+                                        p_control_MB = [p_control_MB, tbl.("P-value")(row)];
+                                    end
+                                end
+                            end
+                            tbl =  tbl(idx_keep, :);
+                            
+                            ymax=0;
+                            for i = 1:numel(ths)-1
+                                st_MB = sigstars(p_control_MB(i));
+                                
+                                MB_y_pos = mean(perc_MB(i,:),2,'omitnan') + std(perc_MB(i,:),0,2,'omitnan') + 2;
+                                ymax = max([ymax, MB_y_pos + 0.05]);
+                                if ~strcmp(st_MB, 'ns')
+                                    MB_poses = 1.25:2:((length(ths)-1)*2);
+                                    pos = MB_poses(i);
+                                    text(pos, MB_y_pos,st_MB, 'Color', '#09425A', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                                end
 
+                            end
+
+                        case 2
+                            b1 = bar(0.75:2:((length(ths)-1)*2), mean(perc_control,2,'omitnan'),0.25,'FaceColor','#8c1515');
+                            hold on;
+                            b3 = bar(1.25:2:((length(ths)-1)*2), mean(perc_NB,2,'omitnan'),0.25,'FaceColor','#77AC30');
+                            hold on;
+                            errorbar(0.75:2:((length(ths)-1)*2),mean(perc_control,2,'omitnan'),...
+                                        [],std(perc_control,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                            hold on;
+                            errorbar(1.25:2:((length(ths)-1)*2),mean(perc_NB,2,'omitnan'),...
+                                        [],std(perc_NB,0,2,'omitnan'),'k',...
+                                        'LineStyle','none');
+                                    
+                             % Add significance stars of control vs NB vs NB of same diameter
+                            data = [];
+                            bubble_type = [];
+                            diameter = [];
+                            diams = [];
+                            for i = 1:numel(ths)-1
+                                % save results to table
+                                if i == numel(ths)
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                else
+                                    diam = strcat(string(ths(i)), " to ", string(ths(i+1)));
+                                end
+                                diams = [diams diam];
+                                
+                                data = [data, perc_control(i, :), perc_NB(i, :)];
+                                group_control = repmat(["Control"], 1, length(perc_control(i, :)));
+                                group_NB = repmat(["NBs"], 1, length(perc_NB(i, :)));
+                                bubble_type = [bubble_type, group_control ,group_NB];
+                                group_diameter = repmat([diam], 1, length(perc_control(i, :))+length(perc_NB(i, :)));
+                                diameter = [diameter, group_diameter];
+                            end
+        
+                            % Perform ANOVA
+                            [p, ~, stats] = anovan(data,{bubble_type diameter},'model',2,'varnames',{'bubble type','diameter'}, 'Display','off');
+                            [c, ~, ~, gnames] = multcompare(stats, 'Display','off', 'Dimension', [1, 2]);
+        
+                            tbl = array2table(c,"VariableNames", ...
+                            ["Group A","Group B","Lower Limit","A-B","Upper Limit","P-value"]);
+                            tbl.("Group A")=gnames(tbl.("Group A"));
+                            tbl.("Group B")=gnames(tbl.("Group B"));
+                            
+                            idx_keep = [];
+                            p_control_NB = [];
+                            for row=1:height(tbl)
+                                if strcmp(tbl.("Group A"){row}(end-5:end), tbl.("Group B"){row}(end-5:end))
+                                    idx_keep = [idx_keep, row];
+                                    if strcmp(tbl.("Group A"){row}(13), 'C') && strcmp(tbl.("Group B"){row}(13), 'N')
+                                        p_control_NB = [p_control_NB, tbl.("P-value")(row)];
+                                    end
+                                end
+                            end
+                            tbl =  tbl(idx_keep, :);
+                            
+                            ymax=0;
+                            for i = 1:numel(ths)-1
+                                st_NB = sigstars(p_control_NB(i));
+                                
+                                NB_y_pos = mean(perc_NB(i,:),2,'omitnan') + std(perc_NB(i,:),0,2,'omitnan') + 2;
+                                ymax = max([ymax, NB_y_pos + 0.05]);
+                                if ~strcmp(st_NB, 'ns')
+                                    NB_poses = 1.25:2:((length(ths)-1)*2);
+                                    pos = NB_poses(i);
+                                    text(pos, NB_y_pos,st_NB, 'Color', '#77AC30', 'HorizontalAlignment', 'center', 'FontSize', 12);
+                                end
+
+                            end
+                    end
 
                 case 1
                     subplot(2,2,2)
@@ -1339,7 +1706,14 @@ classdef EB_analysis
             xticklabels(generate_xticks(ths(2:end)));
             ylabel('Open vessel fraction [%]');
             title('Opened Vessel Fraction as Function of Vessel Diameter');
-            legend([b1, b2, b3], 'Control', 'MB', 'NB')
+
+            if groups == 0
+                legend([b1, b2, b3], 'Control', 'MB', 'NB')
+            elseif groups == 1
+                legend([b1, b2], 'Control', 'MB')
+            elseif groups == 2
+                legend([b1, b3], 'Control', 'NB')
+            end
             ylim([0 ymax+2])
             
             perc_tbl_MB = array2table(perc_MB,'VariableNames',MB_frames,...
@@ -1358,18 +1732,18 @@ classdef EB_analysis
             region = cellfun(@(x) x{3},frame_label,'UniformOutput',...
                 false);
             region = prettify_region(region);
-            MB_animals = unique(animal_names(~control_idx));
+            treatment_animals = unique(animal_names(~control_idx));
             regions = unique(region(~control_idx));
-            counts = zeros(numel(regions),numel(MB_animals));
+            counts = zeros(numel(regions),numel(treatment_animals));
             for i = 1:numel(regions)
-                for j = 1:numel(MB_animals)
+                for j = 1:numel(treatment_animals)
                     counts(i,j) = sum(strcmp(region,regions(i)) &...
-                        strcmp(animal_names,MB_animals(j)));
+                        strcmp(animal_names,treatment_animals(j)));
                 end
             end
             figure;
             bar(counts,0.5);
-            legend(MB_animals)
+            legend(treatment_animals)
             xticklabels(regions);
             ylabel('Total number of vessels');
         end
