@@ -174,14 +174,19 @@ classdef EB_analysis
                 NB_csv_filename = ...
                     fullfile(NB_csv_folder, NB_csv_filename);
             end
-            control_idx = cellfun(@(x) strcmp(x,'control'),obj.segment_tbl.label);
+            control_idx = cellfun(@(x) strcmp(x,'control'),...
+                obj.segment_tbl.label);
+            MB_idx = cellfun(@(x) strcmp(x,'MB'),...
+                obj.segment_tbl.label);
+            NB_idx = cellfun(@(x) strcmp(x,'NB'),...
+                obj.segment_tbl.label);
             n_bins = numel(ths);
             control_discrete_cell = intogroups(...
                 obj.segment_tbl(control_idx,:),ths,GroupByFrame);
             MB_discrete_cell = intogroups(...
-                obj.segment_tbl(~control_idx,:),ths,GroupByFrame);
+                obj.segment_tbl(MB_idx,:),ths,GroupByFrame);
             NB_discrete_cell = intogroups(...
-                obj.segment_tbl(~control_idx,:),ths,GroupByFrame);
+                obj.segment_tbl(NB_idx,:),ths,GroupByFrame);
             str_cell = cell(n_bins-1,1);
             ths = [0,ths];
             for i = 1:n_bins
@@ -197,8 +202,12 @@ classdef EB_analysis
                 [str_cell,NB_discrete_cell],...
                 'VariableNames',{'Diameter','red intensity'});
             writetable(control_tbl, control_csv_filename);
-            writetable(MB_tbl, MB_csv_filename);
-            writetable(NB_tbl, NB_csv_filename);
+            if ~is_empty_table(MB_tbl)
+                writetable(MB_tbl, MB_csv_filename);
+            end
+            if ~is_empty_table(NB_tbl)
+                writetable(NB_tbl, NB_csv_filename);
+            end
         end
         function new_obj = keep_diameters(obj,lowLim,highLim)
            % Remove all vessel segments outside the given diameter range
@@ -1812,4 +1821,13 @@ elseif p <=0.05
 else
    str = 'ns';
 end
+end
+function is_empty = is_empty_table(tbl)
+    for row=1:size(tbl, 1)
+        if ~isempty(tbl{:, 2}{row})
+            is_empty = 0;
+            return
+        end
+    end
+    is_empty = 1;
 end
