@@ -532,6 +532,12 @@ if true
 			  ,'Text','&Export Binary of All Images'...
 			  ,'MenuSelectedFcn',@exportBinarySegmentation_Callback...
 			  )
+
+         uimenu('Parent',dataMenu...
+			  ,'Tag','automaticSegmentation'...
+			  ,'Text','&Automatic Segmentation'...
+			  ,'MenuSelectedFcn',@automaticSegmentation_Callback...
+			  )
 		  
 	imageMenu = ...
 		uimenu('Parent',REAVER_Fig...
@@ -1047,6 +1053,31 @@ function exportBinarySegmentation_Callback(hObject,~)
 			regexprep(processedImageDataFiles{n},'.mat','.tif')]) ;
 	end
 
+end
+
+function automaticSegmentation_Callback(hObject,~)
+	handles = guidata(hObject) ;
+	
+    % process all images to create the .mat files
+    processAllImages_Callback(hObject);
+    
+    % assign the auto segmentation files to the .mat files
+    autoSegmentation(handles.imageDirectory.directory);
+    
+    % update the wire frame
+    relevantFiles = handles.imageDirectory.validFiles ;
+	filepaths = cellfun(@(c) [handles.imageDirectory.directory,handles.slash,c],relevantFiles,'UniformOut',false) ;
+    handles = guidata(hObject) ;
+    for i = 1:length(filepaths)
+        tmp_handles = load([filepaths{i}(1:(end-4)) , '.mat' ]);
+        handles.derivedPic.BW_2 = tmp_handles.derivedPic.BW_2;
+        handles = updateWire(handles);
+        tmp_handles.derivedPic.wire = handles.derivedPic.wire;
+        save( [filepaths{i}(1:(end-4)) , '.mat' ] , '-struct' , 'tmp_handles' ) ;
+    end
+
+    guidata(hObject,handles)
+    
 end
 
 
